@@ -1,0 +1,1443 @@
+<title>Convertitore ScratchLab</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Una colonna, tre passi in sequenza: incolla, controlla, scarica e apri in Scratch. Stessa grafica del laboratorio «Costruttore del compito autentico». */
+:root{
+  --bg:#EEF2F7; --surface:#FFFFFF; --ink:#16203A; --muted:#55607A; --line:#CBD4E3;
+  --accent:#F0B429; --accent-ink:#16203A; --link:#2456C8; --ok:#1F7A4D; --ok-bg:#E3F3EA;
+  --warn:#8A5A00; --warn-bg:#FFF3D6; --err:#B3261E; --err-bg:#FCE8E6; --code-bg:#E3E9F3;
+  --display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10162A; --surface:#19213A; --ink:#E9EDF7; --muted:#A3AEC7; --line:#33406A;
+    --accent:#F5BE3D; --accent-ink:#10162A; --link:#8FB2FF; --ok:#5FD39A; --ok-bg:#16352A;
+    --warn:#F5C45E; --warn-bg:#3A2E12; --err:#FF8A80; --err-bg:#3D1C1C; --code-bg:#0B1020; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10162A; --surface:#19213A; --ink:#E9EDF7; --muted:#A3AEC7; --line:#33406A;
+  --accent:#F5BE3D; --accent-ink:#10162A; --link:#8FB2FF; --ok:#5FD39A; --ok-bg:#16352A;
+  --warn:#F5C45E; --warn-bg:#3A2E12; --err:#FF8A80; --err-bg:#3D1C1C; --code-bg:#0B1020; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.15;text-wrap:balance}
+p{margin:0}
+a{color:var(--link)}
+main{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:32px 40px;display:flex;flex-direction:column;gap:40px}
+header{display:flex;flex-direction:column;gap:8px}
+header h1{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:800}
+header p{color:var(--muted);max-width:62ch}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.st{display:flex;gap:12px;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:8px}
+.st .n{font-family:var(--display);font-weight:800;font-size:1.6rem;background:var(--accent);color:var(--accent-ink);border-radius:6px;padding:0 12px}
+.st h2{font-size:1.4rem;font-weight:800}
+.hint{color:var(--muted);font-size:.95rem;max-width:68ch}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:700;border:2px solid var(--ink);background:var(--surface);color:var(--ink);border-radius:6px;padding:8px 16px;cursor:pointer}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:4px 12px;font-size:.9rem}
+.btn.ghost{border-color:var(--line);font-weight:400}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+select,input[type=text],textarea{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0}
+textarea{width:100%;min-height:300px;resize:vertical;font-family:var(--mono);font-size:.85rem;line-height:1.55;white-space:pre;overflow:auto;tab-size:4}
+input:focus,textarea:focus,select:focus{border-color:var(--link)}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-weight:700;font-size:.95rem}
+.tag{font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-family:var(--display);font-weight:800;font-size:1.25rem}
+.pill{font-family:var(--body);font-size:.85rem;font-weight:700;border-radius:999px;padding:3px 12px;border:1.5px solid currentColor}
+.pill.ok{color:var(--ok);background:var(--ok-bg)} .pill.wait{color:var(--muted);background:var(--surface)} .pill.warn{color:var(--warn);background:var(--warn-bg)} .pill.err{color:var(--err);background:var(--err-bg)}
+.sprites{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.spr{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.spr b{font-family:var(--display);font-size:1.05rem}
+.spr span{font-size:.88rem;color:var(--muted);overflow-wrap:anywhere}
+.meta{font-size:.92rem;color:var(--muted);overflow-wrap:anywhere}
+.meta b{color:var(--ink)}
+ul.issues{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+ul.issues li{border-radius:6px;padding:8px 12px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;min-width:0}
+ul.issues li.err{background:var(--err-bg);border-left:4px solid var(--err)}
+ul.issues li.warn{background:var(--warn-bg);border-left:4px solid var(--warn)}
+.ln{font-family:var(--mono);font-size:.82rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.code{font-family:var(--mono);font-size:.82rem;overflow-wrap:anywhere;min-width:0}
+.msg{grid-column:2;font-size:.92rem}
+.preview{display:flex;flex-direction:column;gap:16px}
+.script{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.script .head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.blocks{overflow-x:auto;padding:4px 0;background:#FFFFFF;border-radius:6px}
+.blocks svg{display:block;max-width:none}
+pre.sbtext{margin:0;background:var(--code-bg);border-radius:6px;padding:12px;font-family:var(--mono);font-size:.8rem;line-height:1.5;white-space:pre;overflow:auto;max-height:240px}
+ol.steps{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:6px;max-width:68ch}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.note ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+details summary{cursor:pointer;font-weight:700}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-weight:700;z-index:9;max-width:90vw;text-align:center}
+footer{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:0 32px;color:var(--muted);font-size:.85rem;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<main>
+<header>
+  <span class="tag">ScratchLab Designer · collana EduGem</span>
+  <h1>Convertitore ScratchLab</h1>
+  <p>Incolla gli script consegnati da ScratchLab Designer: il convertitore controlla ogni riga sulle diciture ufficiali dell'editor italiano e crea il file .sb3 da aprire in Scratch, più le immagini dei blocchi per le schede.</p>
+</header>
+
+<section aria-labelledby="t1">
+  <div class="st"><span class="n">1</span><h2 id="t1">Incolla gli script</h2></div>
+  <p class="hint">In Gemini usa il pulsante <b>Copia</b> del blocco «Script per il convertitore»: contiene tutti gli script del progetto, uno dopo l'altro. Funziona anche se copi tutta la risposta: il convertitore legge solo gli script che iniziano con «SPRITE: nome» o «STAGE» e ignora il testo intorno. Se correggi uno script, incolla di nuovo il blocco completo aggiornato.</p>
+  <div class="acts">
+    <label class="tag" for="esempio">Esempio</label>
+    <select id="esempio">
+      <option value="quiz">Matematica · quiz sulle tabelline</option>
+      <option value="storia">Storia · linea del tempo</option>
+      <option value="poligoni">Geometria · poligoni con la Penna</option>
+    </select>
+    <button class="btn sm ghost" id="carica" type="button">Carica l'esempio</button>
+    <button class="btn sm ghost" id="svuota" type="button">Svuota</button>
+  </div>
+  <textarea id="src" spellcheck="false" aria-label="Script da convertire" placeholder="Incolla qui il blocco «Script per il convertitore» copiato da Gemini.&#10;&#10;SPRITE: Gatto · script 1 di 2&#10;🟡 Situazioni    quando si clicca su 🏁&#10;…"></textarea>
+  <div class="acts"><button class="btn pri" id="converti" type="button">Controlla e converti</button><span class="hint" id="autohint">Il controllo si aggiorna anche mentre scrivi.</span></div>
+</section>
+
+<section aria-labelledby="t2">
+  <div class="st"><span class="n">2</span><h2 id="t2">Controlla</h2></div>
+  <div class="status" id="status" role="status"></div>
+  <div class="sprites" id="sprites"></div>
+  <p class="meta" id="meta"></p>
+  <ul class="issues" id="issues"></ul>
+</section>
+
+<section aria-labelledby="t3">
+  <div class="st"><span class="n">3</span><h2 id="t3">Scarica e apri in Scratch</h2></div>
+  <div class="acts">
+    <div class="field"><label for="nome">Nome del file</label><input type="text" id="nome" placeholder="progetto-scratchlab"></div>
+  </div>
+  <div class="acts">
+    <button class="btn pri" id="sb3" type="button">Scarica il file .sb3</button>
+    <button class="btn" id="copiasb" type="button">Copia il testo per scratchblocks</button>
+  </div>
+  <p class="hint" id="dlhint"></p>
+  <ol class="steps">
+    <li>Apri Scratch (sito scratch.mit.edu oppure app per computer) e scegli <b>File › Carica dal tuo computer</b>.</li>
+    <li>Seleziona il file .sb3 appena scaricato: trovi gli sprite con i loro script già montati.</li>
+    <li>Sostituisci sfondi, suoni e costumi provvisori. Per uno sfondo o un suono citato negli script (per esempio «Stars», «Collect»): <b>prima elimina quello provvisorio, poi scegli dalla libreria quello con lo stesso nome</b>; se lo aggiungi prima, Scratch lo chiama «Stars2» e gli script non lo trovano. Per i costumi basta sceglierne uno nuovo ed eliminare il quadrato colorato.</li>
+    <li>Premi la bandiera verde e fai le prove di «Come provarlo», giocando come un alunno fino alla fine.</li>
+  </ol>
+  <div class="note">
+    <b>Che cosa c'è nel file</b>
+    <ul>
+      <li>Gli script, le variabili, le liste e i messaggi.</li>
+      <li>Un costume provvisorio per ogni sprite (un quadrato colorato con l'iniziale, oppure con la lettera finale del nome come in «Pianeta A», e il nome scritto sotto) e sfondi provvisori con il loro nome scritto in basso; uno sfondo che si chiama «xy-grid» o «griglia» esce con il piano cartesiano disegnato.</li>
+      <li>I controlli sulla logica del gioco, segnalati con il rimedio: sprite che partono insieme e leggono valori non ancora pronti, messaggi senza chi li riceve, liste che si allungano a ogni partita, punteggi che non si azzerano, sprite che restano nascosti, doppi clic che contano due volte, sprite sovrapposti o fuori dallo Stage, parentesi che non tornano.</li>
+      <li>I suoni citati negli script, ma muti: hanno il nome giusto e vanno sostituiti.</li>
+      <li>Le estensioni usate (Penna, Musica, Da Testo a Voce, Traduci) si attivano da sole.</li>
+    </ul>
+  </div>
+</section>
+
+<section aria-labelledby="t4">
+  <div class="st"><span class="n">4</span><h2 id="t4">Blocchi per le schede</h2></div>
+  <p class="hint">Le immagini dei blocchi in italiano, da scaricare in SVG e inserire in schede, consegne o slide. Il testo per scratchblocks si incolla anche nel generatore su scratchblocks.github.io.</p>
+  <div class="preview" id="preview"></div>
+  <details><summary>Testo per scratchblocks</summary><pre class="sbtext" id="sbtext"></pre></details>
+</section>
+</main>
+
+<footer>
+  <span>[ Gem progettata da Emilia Sera — www.edugem.it ] · Convertitore ScratchLab, collana EduGem. Gli script restano su questo dispositivo: la conversione avviene nel browser.</span>
+  <span>Scratch è un progetto della Scratch Foundation; questo strumento non è affiliato. Usa JSZip (MIT) e scratchblocks (MIT).</span>
+  <div><button class="btn sm ghost" id="tema" type="button">Cambia tema</button></div>
+</footer>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/scratchblocks@3.7.1/build/scratchblocks.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/scratchblocks@3.7.1/build/translations.js"></script>
+<script>
+/* ScratchLab Convertitore — motore di conversione
+   Dal formato degli script di ScratchLab Designer (file 02 §5.2) al progetto Scratch 3.0 (.sb3)
+   e al testo scratchblocks in italiano. Nessuna dipendenza esterna: lo zip si crea fuori (JSZip). */
+(function (root) {
+  "use strict";
+
+  // ---------- utilità ----------
+  function md5(str) { // md5 di una stringa UTF-8 o di un Uint8Array
+    var bytes = typeof str === "string" ? utf8(str) : str;
+    function add(x, y) { var l = (x & 0xffff) + (y & 0xffff); return (((x >> 16) + (y >> 16) + (l >> 16)) << 16) | (l & 0xffff); }
+    function rol(n, c) { return (n << c) | (n >>> (32 - c)); }
+    function cmn(q, a, b, x, s, t) { return add(rol(add(add(a, q), add(x, t)), s), b); }
+    function ff(a, b, c, d, x, s, t) { return cmn((b & c) | (~b & d), a, b, x, s, t); }
+    function gg(a, b, c, d, x, s, t) { return cmn((b & d) | (c & ~d), a, b, x, s, t); }
+    function hh(a, b, c, d, x, s, t) { return cmn(b ^ c ^ d, a, b, x, s, t); }
+    function ii(a, b, c, d, x, s, t) { return cmn(c ^ (b | ~d), a, b, x, s, t); }
+    var n = bytes.length, nblk = ((n + 8) >> 6) + 1, x = new Array(nblk * 16).fill(0), i;
+    for (i = 0; i < n; i++) x[i >> 2] |= bytes[i] << ((i % 4) * 8);
+    x[i >> 2] |= 0x80 << ((i % 4) * 8);
+    x[nblk * 16 - 2] = n * 8;
+    var a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
+    for (i = 0; i < x.length; i += 16) {
+      var oa = a, ob = b, oc = c, od = d;
+      a = ff(a, b, c, d, x[i], 7, -680876936); d = ff(d, a, b, c, x[i + 1], 12, -389564586); c = ff(c, d, a, b, x[i + 2], 17, 606105819); b = ff(b, c, d, a, x[i + 3], 22, -1044525330);
+      a = ff(a, b, c, d, x[i + 4], 7, -176418897); d = ff(d, a, b, c, x[i + 5], 12, 1200080426); c = ff(c, d, a, b, x[i + 6], 17, -1473231341); b = ff(b, c, d, a, x[i + 7], 22, -45705983);
+      a = ff(a, b, c, d, x[i + 8], 7, 1770035416); d = ff(d, a, b, c, x[i + 9], 12, -1958414417); c = ff(c, d, a, b, x[i + 10], 17, -42063); b = ff(b, c, d, a, x[i + 11], 22, -1990404162);
+      a = ff(a, b, c, d, x[i + 12], 7, 1804603682); d = ff(d, a, b, c, x[i + 13], 12, -40341101); c = ff(c, d, a, b, x[i + 14], 17, -1502002290); b = ff(b, c, d, a, x[i + 15], 22, 1236535329);
+      a = gg(a, b, c, d, x[i + 1], 5, -165796510); d = gg(d, a, b, c, x[i + 6], 9, -1069501632); c = gg(c, d, a, b, x[i + 11], 14, 643717713); b = gg(b, c, d, a, x[i], 20, -373897302);
+      a = gg(a, b, c, d, x[i + 5], 5, -701558691); d = gg(d, a, b, c, x[i + 10], 9, 38016083); c = gg(c, d, a, b, x[i + 15], 14, -660478335); b = gg(b, c, d, a, x[i + 4], 20, -405537848);
+      a = gg(a, b, c, d, x[i + 9], 5, 568446438); d = gg(d, a, b, c, x[i + 14], 9, -1019803690); c = gg(c, d, a, b, x[i + 3], 14, -187363961); b = gg(b, c, d, a, x[i + 8], 20, 1163531501);
+      a = gg(a, b, c, d, x[i + 13], 5, -1444681467); d = gg(d, a, b, c, x[i + 2], 9, -51403784); c = gg(c, d, a, b, x[i + 7], 14, 1735328473); b = gg(b, c, d, a, x[i + 12], 20, -1926607734);
+      a = hh(a, b, c, d, x[i + 5], 4, -378558); d = hh(d, a, b, c, x[i + 8], 11, -2022574463); c = hh(c, d, a, b, x[i + 11], 16, 1839030562); b = hh(b, c, d, a, x[i + 14], 23, -35309556);
+      a = hh(a, b, c, d, x[i + 1], 4, -1530992060); d = hh(d, a, b, c, x[i + 4], 11, 1272893353); c = hh(c, d, a, b, x[i + 7], 16, -155497632); b = hh(b, c, d, a, x[i + 10], 23, -1094730640);
+      a = hh(a, b, c, d, x[i + 13], 4, 681279174); d = hh(d, a, b, c, x[i], 11, -358537222); c = hh(c, d, a, b, x[i + 3], 16, -722521979); b = hh(b, c, d, a, x[i + 6], 23, 76029189);
+      a = hh(a, b, c, d, x[i + 9], 4, -640364487); d = hh(d, a, b, c, x[i + 12], 11, -421815835); c = hh(c, d, a, b, x[i + 15], 16, 530742520); b = hh(b, c, d, a, x[i + 2], 23, -995338651);
+      a = ii(a, b, c, d, x[i], 6, -198630844); d = ii(d, a, b, c, x[i + 7], 10, 1126891415); c = ii(c, d, a, b, x[i + 14], 15, -1416354905); b = ii(b, c, d, a, x[i + 5], 21, -57434055);
+      a = ii(a, b, c, d, x[i + 12], 6, 1700485571); d = ii(d, a, b, c, x[i + 3], 10, -1894986606); c = ii(c, d, a, b, x[i + 10], 15, -1051523); b = ii(b, c, d, a, x[i + 1], 21, -2054922799);
+      a = ii(a, b, c, d, x[i + 8], 6, 1873313359); d = ii(d, a, b, c, x[i + 15], 10, -30611744); c = ii(c, d, a, b, x[i + 6], 15, -1560198380); b = ii(b, c, d, a, x[i + 13], 21, 1309151649);
+      a = ii(a, b, c, d, x[i + 4], 6, -145523070); d = ii(d, a, b, c, x[i + 11], 10, -1120210379); c = ii(c, d, a, b, x[i + 2], 15, 718787259); b = ii(b, c, d, a, x[i + 9], 21, -343485551);
+      a = add(a, oa); b = add(b, ob); c = add(c, oc); d = add(d, od);
+    }
+    var out = "", w = [a, b, c, d];
+    for (i = 0; i < 4; i++) for (var j = 0; j < 4; j++) out += ("0" + ((w[i] >> (j * 8)) & 255).toString(16)).slice(-2);
+    return out;
+  }
+  function utf8(s) {
+    if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(s);
+    var out = [], i, c; s = unescape(encodeURIComponent(s));
+    for (i = 0; i < s.length; i++) { c = s.charCodeAt(i); out.push(c); }
+    return new Uint8Array(out);
+  }
+  function norm(w) {
+    return String(w).toLowerCase().normalize("NFC").replace(/[’`´]/g, "'").replace(/\?$/, "").trim();
+  }
+  function xmlEsc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---------- mappe dei menu (voce italiana -> valore interno) ----------
+  var M = {
+    key: { "spazio": "space", "freccia su": "up arrow", "freccia giù": "down arrow", "freccia giu": "down arrow", "freccia destra": "right arrow", "freccia sinistra": "left arrow", "qualunque": "any", "qualsiasi": "any" },
+    lookEffect: { "colore": "COLOR", "fish-eye": "FISHEYE", "fisheye": "FISHEYE", "mulinello": "WHIRL", "effetto pixel": "PIXELATE", "pixel": "PIXELATE", "mosaico": "MOSAIC", "luminosità": "BRIGHTNESS", "fantasma": "GHOST" },
+    soundEffect: { "frequenza": "PITCH", "panning sinistra/destra": "PAN", "tono": "PITCH" },
+    rotation: { "sinistra-destra": "left-right", "non ruotare": "don't rotate", "può ruotare": "all around", "tutto intorno": "all around" },
+    drag: { "trascinabile": "draggable", "non trascinabile": "not draggable", "sì": "draggable", "si": "draggable", "no": "not draggable" },
+    frontBack: { "primo": "front", "secondo": "back", "ultimo": "back" },
+    fwdBack: { "avanti": "forward", "indietro": "backward" },
+    stop: { "tutto": "all", "questo script": "this script", "tutti gli altri script dello sprite": "other scripts in sprite" },
+    whenGreater: { "volume microfono": "LOUDNESS", "volume": "LOUDNESS", "cronometro": "TIMER" },
+    current: { "anno": "YEAR", "mese": "MONTH", "data": "DATE", "giorno della settimana": "DAYOFWEEK", "ora": "HOUR", "minuto": "MINUTE", "secondo": "SECOND" },
+    mathop: { "valore assoluto": "abs", "intero inferiore": "floor", "intero superiore": "ceiling", "radice quadrata": "sqrt", "sen": "sin", "cos": "cos", "tan": "tan", "arcsen": "asin", "arccos": "acos", "arctan": "atan", "ln": "ln", "log": "log", "e ^": "e ^", "10 ^": "10 ^" },
+    mathopAlias: { "sin": "sin", "sqrt": "sqrt", "asin": "asin", "acos": "acos", "atan": "atan", "abs": "abs" },
+    numName: { "numero": "number", "nome": "name" },
+    ofProp: { "posizione x": "x position", "posizione y": "y position", "direzione": "direction", "numero del costume": "costume #", "nome del costume": "costume name", "dimensione": "size", "volume": "volume", "numero dello sfondo": "backdrop #", "nome dello sfondo": "backdrop name" },
+    penParam: { "colore": "color", "intensità colore": "saturation", "luminosità": "brightness", "trasparenza": "transparency" },
+    voice: { "da contralto": "ALTO", "contralto": "ALTO", "da tenore": "TENOR", "tenore": "TENOR", "stridula": "SQUEAK", "cigolio": "SQUEAK", "da gigante": "GIANT", "gigante": "GIANT", "da gattino": "KITTEN", "gattino": "KITTEN" },
+    lang: { "italian": "it", "italiano": "it", "english": "en", "inglese": "en", "french": "fr", "francese": "fr", "spanish": "es", "spagnolo": "es", "german": "de", "tedesco": "de", "portuguese": "pt", "portoghese": "pt", "chinese (mandarin)": "zh-cn", "cinese": "zh-cn", "japanese": "ja", "giapponese": "ja", "russian": "ru", "russo": "ru", "arabic": "ar", "arabo": "ar", "romanian": "ro", "rumeno": "ro", "dutch": "nl", "olandese": "nl", "polish": "pl", "polacco": "pl" },
+    target: { "posizione a caso": "_random_", "puntatore del mouse": "_mouse_", "direzione a caso": "_random_", "bordo": "_edge_", "me stesso": "_myself_", "stage": "_stage_", "lo stage": "_stage_" }
+  };
+  var COLORS = { "rosso": "#e6194b", "verde": "#3cb44b", "blu": "#4363d8", "giallo": "#ffe119", "arancione": "#f58231", "viola": "#911eb4", "nero": "#000000", "bianco": "#ffffff", "azzurro": "#56b4e9", "rosa": "#f032e6", "grigio": "#808080", "marrone": "#8b4513" };
+
+  // ---------- catalogo dei blocchi ----------
+  // tipi di slot: num int whole pnum angle text bool color note var list bcast bcastf flag
+  //   menu:SHADOWOPCODE:FIELD:mappa:attributi   field:FIELD:mappa
+  var B = [];
+  function def(kind, op, tpl, extra) { var o = { kind: kind, op: op, tpl: tpl }; if (extra) for (var k in extra) o[k] = extra[k]; B.push(o); return o; }
+  // Movimento
+  def("stack", "motion_movesteps", "fai {STEPS:num} passi");
+  def("stack", "motion_turnright", "ruota ↻ di {DEGREES:num} gradi", { sb: "ruota @turnRight di {DEGREES} gradi" });
+  def("stack", "motion_turnright", "ruota a destra di {DEGREES:num} gradi", { alias: "ruota ↻ di ( ) gradi", sb: "ruota @turnRight di {DEGREES} gradi" });
+  def("stack", "motion_turnright", "ruota in senso orario di {DEGREES:num} gradi", { alias: "ruota ↻ di ( ) gradi", sb: "ruota @turnRight di {DEGREES} gradi" });
+  def("stack", "motion_turnleft", "ruota ↺ di {DEGREES:num} gradi", { sb: "ruota @turnLeft di {DEGREES} gradi" });
+  def("stack", "motion_turnleft", "ruota a sinistra di {DEGREES:num} gradi", { alias: "ruota ↺ di ( ) gradi", sb: "ruota @turnLeft di {DEGREES} gradi" });
+  def("stack", "motion_turnleft", "ruota in senso antiorario di {DEGREES:num} gradi", { alias: "ruota ↺ di ( ) gradi", sb: "ruota @turnLeft di {DEGREES} gradi" });
+  def("stack", "motion_goto", "raggiungi {TO:menu:motion_goto_menu:TO:target:sprite}");
+  def("stack", "motion_gotoxy", "vai a x: {X:num} y: {Y:num}");
+  def("stack", "motion_glidesecstoxy", "scivola in {SECS:num} secondi a x: {X:num} y: {Y:num}");
+  def("stack", "motion_glideto", "scivola in {SECS:num} secondi a {TO:menu:motion_glideto_menu:TO:target:sprite}");
+  def("stack", "motion_pointindirection", "punta in direzione {DIRECTION:angle}");
+  def("stack", "motion_pointtowards", "punta verso {TOWARDS:menu:motion_pointtowards_menu:TOWARDS:target:sprite}");
+  def("stack", "motion_changexby", "cambia x di {DX:num}");
+  def("stack", "motion_setx", "vai dove x è {X:num}");
+  def("stack", "motion_setx", "porta x a {X:num}", { alias: "vai dove x è ( )" });
+  def("stack", "motion_changeyby", "cambia y di {DY:num}");
+  def("stack", "motion_sety", "vai dove y è {Y:num}");
+  def("stack", "motion_sety", "porta y a {Y:num}", { alias: "vai dove y è ( )" });
+  def("stack", "motion_ifonedgebounce", "rimbalza quando tocchi il bordo");
+  def("stack", "motion_setrotationstyle", "usa stile rotazione {STYLE:field:STYLE:rotation}");
+  def("reporter", "motion_xposition", "posizione x");
+  def("reporter", "motion_yposition", "posizione y");
+  def("reporter", "motion_direction", "direzione");
+  // Aspetto
+  def("stack", "looks_sayforsecs", "dire {MESSAGE:text} per {SECS:num} secondi");
+  def("stack", "looks_say", "dire {MESSAGE:text}");
+  def("stack", "looks_thinkforsecs", "pensa {MESSAGE:text} per {SECS:num} secondi");
+  def("stack", "looks_think", "pensa {MESSAGE:text}");
+  def("stack", "looks_switchcostumeto", "passa al costume {COSTUME:menu:looks_costume:COSTUME::costume}");
+  def("stack", "looks_nextcostume", "passa al costume seguente");
+  def("stack", "looks_switchbackdropto", "passa allo sfondo {BACKDROP:menu:looks_backdrops:BACKDROP::backdrop}");
+  def("stack", "looks_switchbackdroptoandwait", "passa allo sfondo {BACKDROP:menu:looks_backdrops:BACKDROP::backdrop} e attendi");
+  def("stack", "looks_nextbackdrop", "passa allo sfondo seguente");
+  def("stack", "looks_changesizeby", "cambia dimensione di {CHANGE:num}");
+  def("stack", "looks_setsizeto", "porta dimensione a {SIZE:num} %");
+  def("stack", "looks_setsizeto", "porta dimensione a {SIZE:num}%", { sbOnly: false });
+  def("stack", "looks_changeeffectby", "cambia effetto {EFFECT:field:EFFECT:lookEffect} di {CHANGE:num}");
+  def("stack", "looks_seteffectto", "porta effetto {EFFECT:field:EFFECT:lookEffect} a {VALUE:num}");
+  def("stack", "looks_cleargraphiceffects", "rimuovi effetti grafici");
+  def("stack", "looks_show", "mostra");
+  def("stack", "looks_hide", "nascondi");
+  def("stack", "looks_gotofrontback", "vai in {FRONT_BACK:field:FRONT_BACK:frontBack} piano");
+  def("stack", "looks_goforwardbackwardlayers", "vai {FORWARD_BACKWARD:field:FORWARD_BACKWARD:fwdBack} di {NUM:int} livelli");
+  def("reporter", "looks_costumenumbername", "{NUMBER_NAME:field:NUMBER_NAME:numName} costume");
+  def("reporter", "looks_backdropnumbername", "{NUMBER_NAME:field:NUMBER_NAME:numName} sfondo");
+  def("reporter", "looks_size", "dimensione");
+  // Suono
+  def("stack", "sound_playuntildone", "riproduci suono {SOUND_MENU:menu:sound_sounds_menu:SOUND_MENU::sound} e attendi la fine");
+  def("stack", "sound_play", "avvia riproduzione suono {SOUND_MENU:menu:sound_sounds_menu:SOUND_MENU::sound}");
+  def("stack", "sound_stopallsounds", "ferma tutti i suoni");
+  def("stack", "sound_changeeffectby", "cambia effetto {EFFECT:field:EFFECT:soundEffect} di {VALUE:num}");
+  def("stack", "sound_seteffectto", "porta effetto {EFFECT:field:EFFECT:soundEffect} a {VALUE:num}");
+  def("stack", "sound_cleareffects", "rimuovi effetti audio");
+  def("stack", "sound_changevolumeby", "cambia volume di {VOLUME:num}");
+  def("stack", "sound_setvolumeto", "porta volume a {VOLUME:num}%");
+  def("stack", "sound_setvolumeto", "porta volume a {VOLUME:num} %");
+  def("reporter", "sound_volume", "volume");
+  // Situazioni
+  def("hat", "event_whenflagclicked", "quando si clicca su {F:flag}", { sb: "quando si clicca su @greenFlag" });
+  def("hat", "event_whenflagclicked", "quando si clicca sulla bandiera verde", { sb: "quando si clicca su @greenFlag" });
+  def("hat", "event_whenflagclicked", "quando si clicca su bandiera verde", { sb: "quando si clicca su @greenFlag" });
+  def("hat", "event_whenkeypressed", "quando si preme il tasto {KEY_OPTION:field:KEY_OPTION:key}");
+  def("hat", "event_whenthisspriteclicked", "quando si clicca questo sprite");
+  def("hat", "event_whenstageclicked", "quando si clicca sullo stage");
+  def("hat", "event_whenbackdropswitchesto", "quando lo sfondo passa a {BACKDROP:field:BACKDROP::backdrop}");
+  def("hat", "event_whengreaterthan", "quando {WHENGREATERTHANMENU:field:WHENGREATERTHANMENU:whenGreater} > {VALUE:num}");
+  def("hat", "event_whenbroadcastreceived", "quando ricevo {BROADCAST_OPTION:bcastf}");
+  def("hat", "event_whenbroadcastreceived", "quando ricevi {BROADCAST_OPTION:bcastf}", { alias: "quando ricevo ( )" });
+  def("stack", "event_broadcast", "invia a tutti {BROADCAST_INPUT:bcast}");
+  def("stack", "event_broadcastandwait", "invia a tutti {BROADCAST_INPUT:bcast} e attendi");
+  // Controllo
+  def("stack", "control_wait", "attendi {DURATION:pnum} secondi");
+  def("c", "control_repeat", "ripeti {TIMES:whole} volte");
+  def("c", "control_forever", "per sempre", { cap: true });
+  def("c", "control_if", "se {CONDITION:bool} allora");
+  def("c", "control_if", "se {CONDITION:bool}", { alias: "se < > allora" });
+  def("stack", "control_wait_until", "attendi fino a quando {CONDITION:bool}");
+  def("c", "control_repeat_until", "ripeti fino a quando {CONDITION:bool}");
+  def("stack", "control_stop", "ferma {STOP_OPTION:field:STOP_OPTION:stop}");
+  def("hat", "control_start_as_clone", "quando vengo clonato");
+  def("stack", "control_create_clone_of", "crea clone di {CLONE_OPTION:menu:control_create_clone_of_menu:CLONE_OPTION:target:sprite}");
+  def("stack", "control_delete_this_clone", "elimina questo clone", { cap: true });
+  // Sensori
+  def("boolean", "sensing_touchingobject", "sta toccando {TOUCHINGOBJECTMENU:menu:sensing_touchingobjectmenu:TOUCHINGOBJECTMENU:target:sprite}");
+  def("boolean", "sensing_touchingcolor", "sta toccando il colore {COLOR:color}");
+  def("boolean", "sensing_coloristouchingcolor", "il colore {COLOR:color} sta toccando il colore {COLOR2:color}");
+  def("reporter", "sensing_distanceto", "distanza da {DISTANCETOMENU:menu:sensing_distancetomenu:DISTANCETOMENU:target:sprite}");
+  def("stack", "sensing_askandwait", "chiedi {QUESTION:text} e attendi");
+  def("reporter", "sensing_answer", "risposta");
+  def("boolean", "sensing_keypressed", "tasto {KEY_OPTION:menu:sensing_keyoptions:KEY_OPTION:key} premuto");
+  def("boolean", "sensing_mousedown", "pulsante del mouse premuto");
+  def("boolean", "sensing_mousedown", "mouse premuto", { alias: "pulsante del mouse premuto" });
+  def("reporter", "sensing_mousex", "x del mouse");
+  def("reporter", "sensing_mousey", "y del mouse");
+  def("stack", "sensing_setdragmode", "rendi lo sprite {DRAG_MODE:field:DRAG_MODE:drag}");
+  def("reporter", "sensing_loudness", "volume microfono");
+  def("reporter", "sensing_timer", "cronometro");
+  def("stack", "sensing_resettimer", "azzera cronometro");
+  def("reporter", "sensing_current", "{CURRENTMENU:field:CURRENTMENU:current} attuale");
+  def("reporter", "sensing_dayssince2000", "giorni trascorsi dal 2000");
+  def("reporter", "sensing_username", "username");
+  // Operatori (mathop prima di sensing_of)
+  def("reporter", "operator_add", "{NUM1:num} + {NUM2:num}");
+  def("reporter", "operator_subtract", "{NUM1:num} - {NUM2:num}");
+  def("reporter", "operator_subtract", "{NUM1:num} − {NUM2:num}");
+  def("reporter", "operator_multiply", "{NUM1:num} * {NUM2:num}");
+  def("reporter", "operator_multiply", "{NUM1:num} × {NUM2:num}");
+  def("reporter", "operator_divide", "{NUM1:num} / {NUM2:num}");
+  def("reporter", "operator_divide", "{NUM1:num} : {NUM2:num}");
+  def("reporter", "operator_random", "numero a caso tra {FROM:num} e {TO:num}");
+  def("boolean", "operator_gt", "{OPERAND1:text} > {OPERAND2:text}");
+  def("boolean", "operator_lt", "{OPERAND1:text} < {OPERAND2:text}");
+  def("boolean", "operator_equals", "{OPERAND1:text} = {OPERAND2:text}");
+  def("boolean", "operator_and", "{OPERAND1:bool} e {OPERAND2:bool}");
+  def("boolean", "operator_or", "{OPERAND1:bool} o {OPERAND2:bool}");
+  def("boolean", "operator_not", "non {OPERAND:bool}");
+  def("reporter", "operator_join", "unione di {STRING1:text} e {STRING2:text}");
+  def("reporter", "operator_letter_of", "lettera {LETTER:whole} di {STRING:text}");
+  def("reporter", "operator_mod", "resto della divisione di {NUM1:num} diviso {NUM2:num}");
+  def("reporter", "operator_mod", "{NUM1:num} mod {NUM2:num}", { alias: "resto della divisione di ( ) diviso ( )" });
+  def("reporter", "operator_round", "arrotonda {NUM:num}");
+  def("reporter", "operator_mathop", "{OPERATOR:field:OPERATOR:mathop} di {NUM:num}");
+  def("reporter", "operator_mathop", "{OPERATOR:field:OPERATOR:mathopAlias} di {NUM:num}", { alias: "nome italiano della funzione (sen, radice quadrata, valore assoluto…)" });
+  // Liste (prima delle versioni testuali)
+  def("reporter", "data_lengthoflist", "lunghezza di {LIST:list}");
+  def("boolean", "data_listcontainsitem", "{LIST:list} contiene {ITEM:text}");
+  def("reporter", "operator_length", "lunghezza di {STRING:text}");
+  def("boolean", "operator_contains", "{STRING1:text} contiene {STRING2:text}");
+  def("reporter", "sensing_of", "{PROPERTY:field:PROPERTY:ofProp} di {OBJECT:menu:sensing_of_object_menu:OBJECT:target:sprite}");
+  // Variabili e liste
+  def("stack", "data_setvariableto", "porta {VARIABLE:var} a {VALUE:text}");
+  def("stack", "data_changevariableby", "cambia {VARIABLE:var} di {VALUE:num}");
+  def("stack", "data_showvariable", "mostra la variabile {VARIABLE:var}");
+  def("stack", "data_showvariable", "mostra variabile {VARIABLE:var}", { alias: "mostra la variabile ( )" });
+  def("stack", "data_hidevariable", "nascondi la variabile {VARIABLE:var}");
+  def("stack", "data_hidevariable", "nascondi variabile {VARIABLE:var}", { alias: "nascondi la variabile ( )" });
+  def("stack", "data_addtolist", "aggiungi {ITEM:text} a {LIST:list}");
+  def("stack", "data_deleteoflist", "cancella {INDEX:int} da {LIST:list}");
+  def("stack", "data_deletealloflist", "cancella tutto da {LIST:list}");
+  def("stack", "data_insertatlist", "inserisci {ITEM:text} alla posizione {INDEX:int} di {LIST:list}");
+  def("stack", "data_replaceitemoflist", "sostituisci elemento {INDEX:int} di {LIST:list} con {ITEM:text}");
+  def("reporter", "data_itemoflist", "elemento {INDEX:int} di {LIST:list}");
+  def("reporter", "data_itemnumoflist", "posizione di {ITEM:text} in {LIST:list}");
+  def("stack", "data_showlist", "mostra la lista {LIST:list}");
+  def("stack", "data_hidelist", "nascondi la lista {LIST:list}");
+  // Penna
+  def("stack", "pen_clear", "pulisci", { ext: "pen" });
+  def("stack", "pen_clear", "pulisci tutto", { ext: "pen", alias: "pulisci" });
+  def("stack", "pen_stamp", "timbra", { ext: "pen" });
+  def("stack", "pen_penDown", "penna giù", { ext: "pen" });
+  def("stack", "pen_penUp", "penna su", { ext: "pen" });
+  def("stack", "pen_setPenColorToColor", "usa penna di colore {COLOR:color}", { ext: "pen" });
+  def("stack", "pen_setPenColorToColor", "porta colore penna a {COLOR:color}", { ext: "pen", alias: "usa penna di colore ( )" });
+  def("stack", "pen_changePenColorParamBy", "cambia {COLOR_PARAM:menu:pen_menu_colorParam:colorParam:penParam} penna di {VALUE:num}", { ext: "pen" });
+  def("stack", "pen_setPenColorParamTo", "porta {COLOR_PARAM:menu:pen_menu_colorParam:colorParam:penParam} penna a {VALUE:num}", { ext: "pen" });
+  def("stack", "pen_changePenSizeBy", "cambia spessore penna di {SIZE:num}", { ext: "pen" });
+  def("stack", "pen_setPenSizeTo", "usa penna di spessore {SIZE:num}", { ext: "pen" });
+  // Da Testo a Voce
+  def("stack", "text2speech_speakAndWait", "pronuncia {WORDS:text}", { ext: "text2speech" });
+  def("stack", "text2speech_setVoice", "usa voce {VOICE:menu:text2speech_menu_voices:voices:voice}", { ext: "text2speech" });
+  def("stack", "text2speech_setLanguage", "usa lingua {LANGUAGE:menu:text2speech_menu_languages:languages:lang}", { ext: "text2speech" });
+  def("stack", "text2speech_setLanguage", "imposta lingua a {LANGUAGE:menu:text2speech_menu_languages:languages:lang}", { ext: "text2speech", alias: "usa lingua ( )" });
+  // Musica
+  def("stack", "music_playDrumForBeats", "suona il tamburo {DRUM:menu:music_menu_DRUM:DRUM:num1} per {BEATS:num} battute", { ext: "music" });
+  def("stack", "music_playDrumForBeats", "suona tamburo {DRUM:menu:music_menu_DRUM:DRUM:num1} per {BEATS:num} battute", { ext: "music" });
+  def("stack", "music_restForBeats", "pausa di {BEATS:num} battute", { ext: "music" });
+  def("stack", "music_playNoteForBeats", "suona la nota {NOTE:note} per {BEATS:num} battute", { ext: "music" });
+  def("stack", "music_setInstrument", "passa a strumento {INSTRUMENT:menu:music_menu_INSTRUMENT:INSTRUMENT:num1}", { ext: "music" });
+  def("stack", "music_setTempo", "imposta tempo a {TEMPO:num} bpm", { ext: "music" });
+  def("stack", "music_changeTempo", "cambia tempo di {TEMPO:num}", { ext: "music" });
+  def("reporter", "music_getTempo", "tempo", { ext: "music" });
+  // Traduci
+  def("reporter", "translate_getTranslate", "traduci {WORDS:text} in {LANGUAGE:menu:translate_menu_languages:languages:lang}", { ext: "translate" });
+  def("reporter", "translate_getViewerLanguage", "lingua", { ext: "translate" });
+
+  // compila i modelli in token
+  B.forEach(function (b) {
+    b.toks = b.tpl.split(/\s+/).filter(Boolean).map(function (t) {
+      var m = /^\{(\w+):([^}]*)\}$/.exec(t);
+      if (!m) return { w: norm(t) };
+      var p = m[2].split(":");
+      return { slot: m[1], type: p[0], a: p.slice(1) };
+    });
+    // un modello «{X} %» scritto attaccato: "{SIZE:num}%"
+    var fixed = [];
+    b.toks.forEach(function (t) {
+      if (t.w === undefined && t.slot === undefined) return;
+      fixed.push(t);
+    });
+    b.toks = fixed;
+    b.nWords = b.toks.filter(function (t) { return t.w !== undefined; }).length;
+  });
+  // modelli con «{X:num}%» attaccato: separa
+  B.forEach(function (b) {
+    var out = [];
+    b.tpl.split(/\s+/).forEach(function (t) {
+      var m = /^\{(\w+):([^}]*)\}(%)$/.exec(t);
+      if (m) { var p = m[2].split(":"); out.push({ slot: m[1], type: p[0], a: p.slice(1) }); out.push({ w: "%" }); }
+      else {
+        var m2 = /^\{(\w+):([^}]*)\}$/.exec(t);
+        if (m2) { var p2 = m2[2].split(":"); out.push({ slot: m2[1], type: p2[0], a: p2.slice(1) }); }
+        else if (t) out.push({ w: norm(t) });
+      }
+    });
+    b.toks = out;
+    b.nWords = out.filter(function (t) { return t.w !== undefined; }).length;
+  });
+
+  // ---------- tokenizzatore ----------
+  function tokenize(s) {
+    var toks = [], i = 0, n = s.length;
+    while (i < n) {
+      var ch = s[i];
+      if (/\s/.test(ch)) { i++; continue; }
+      if (ch === "(" || ch === "[") {
+        var open = ch, close = ch === "(" ? ")" : "]", depth = 0, j = i;
+        for (; j < n; j++) {
+          if (s[j] === open) depth++;
+          else if (s[j] === close) { depth--; if (depth === 0) break; }
+        }
+        if (j >= n) throw new Error("parentesi non chiusa");
+        toks.push({ p: s.slice(i + 1, j), sq: ch === "[" });
+        i = j + 1; continue;
+      }
+      if (ch === "<" && i + 1 < n && !/\s/.test(s[i + 1])) {
+        var d = 0, pd = 0, k = i;
+        for (; k < n; k++) {
+          var c = s[k];
+          if (c === "(") pd++;
+          else if (c === ")") pd--;
+          else if (pd === 0 && c === "<" && k + 1 < n && !/\s/.test(s[k + 1])) d++;
+          else if (pd === 0 && c === ">" && k > 0 && !/\s/.test(s[k - 1])) { d--; if (d === 0) break; }
+        }
+        if (k >= n) throw new Error("condizione < > non chiusa");
+        toks.push({ a: s.slice(i + 1, k) });
+        i = k + 1; continue;
+      }
+      var j2 = i;
+      while (j2 < n && !/\s/.test(s[j2]) && s[j2] !== "(" && s[j2] !== "[" && !(s[j2] === "<" && j2 > i)) j2++;
+      if (j2 === i) j2 = i + 1;
+      var w = s.slice(i, j2);
+      // «%» attaccato a una parola resta separato
+      toks.push({ w: w });
+      i = j2;
+    }
+    return toks;
+  }
+
+  // ---------- parser ----------
+  function Parser(ctx) { this.ctx = ctx; }
+
+  Parser.prototype.matchTemplate = function (b, toks, kindOk) {
+    if (b.toks.length !== toks.length) return null;
+    var args = {}, i;
+    for (i = 0; i < toks.length; i++) { // prima tutte le parole, poi gli slot (gli slot registrano variabili e liste)
+      if (b.toks[i].w !== undefined && (toks[i].w === undefined || norm(toks[i].w) !== b.toks[i].w)) return null;
+      if (b.toks[i].w === undefined && b.toks[i].type !== "flag" && b.toks[i].type !== "field" && toks[i].w !== undefined && !/^-?\d+([.,]\d+)?$/.test(toks[i].w)) return null;
+    }
+    for (i = 0; i < toks.length; i++) {
+      var t = b.toks[i], k = toks[i];
+      if (t.w !== undefined) {
+        if (k.w === undefined || norm(k.w) !== t.w) {
+          // una parola del modello può essere scritta dentro parentesi solo per «🏁»
+          return null;
+        }
+      } else {
+        var v = this.slotValue(t, k, b);
+        if (v === null) return null;
+        args[t.slot] = v;
+      }
+    }
+    return args;
+  };
+
+  // restituisce il valore di uno slot o null se il token non è adatto
+  Parser.prototype.slotValue = function (t, k, b) {
+    var ctx = this.ctx, raw, val;
+    switch (t.type) {
+      case "flag":
+        if (k.w !== undefined && (k.w === "🏁" || /bandiera/i.test(k.w))) return { flag: true };
+        if (k.p !== undefined && /bandiera|🏁/i.test(k.p)) return { flag: true };
+        return null;
+      case "bool":
+        if (k.a !== undefined) { return k.a.trim() === "" ? { empty: true } : this.parseExpr(k.a, "bool"); }
+        return null;
+      case "var": case "list":
+        if (k.p === undefined) return null;
+        raw = k.p.replace(/▾|\bv$/g, "").trim();
+        var hadArrow = /▾/.test(k.p);
+        if (t.type === "list") {
+          if (!hadArrow && !ctx.isList(raw)) return null;
+          if (ctx.isVar(raw) && !ctx.isList(raw) && !hadArrow) return null;
+          ctx.noteList(raw);
+          return { list: raw };
+        }
+        if (!hadArrow && !ctx.isVar(raw)) return null;
+        if (ctx.isList(raw) && !ctx.isVar(raw)) return null;
+        ctx.noteVar(raw);
+        return { variable: raw };
+      case "bcast": case "bcastf":
+        if (k.p === undefined) return null;
+        raw = k.p.replace(/▾/g, "").trim();
+        ctx.noteBroadcast(raw);
+        return { broadcast: raw };
+      case "field":
+        if (k.p === undefined && k.w === undefined) return null;
+        raw = (k.p !== undefined ? k.p : k.w).replace(/▾/g, "").trim();
+        var map = t.a[1] ? M[t.a[1]] : null;
+        if (map) {
+          val = map[norm(raw)];
+          if (val === undefined) {
+            if (t.a[1] === "key" && raw.length === 1) val = raw.toLowerCase();
+            else if (t.a[1] === "ofProp") { if (!ctx.isVar(raw)) return null; val = raw; }
+            else return null;
+          }
+        } else {
+          val = raw;
+          if (t.a[2] === "backdrop") ctx.noteBackdrop(raw);
+        }
+        return { field: val, text: raw };
+      case "menu":
+        if (k.p === undefined) return null;
+        raw = k.p.replace(/▾/g, "").trim();
+        var mapName = t.a[2], kind = t.a[4] || t.a[3];
+        if (!/▾/.test(k.p)) {
+          // un blocco valore al posto del menu
+          var r = this.parseExpr(k.p, "value", true);
+          if (r && r.block) return { menuBlock: r, shadowOp: t.a[0], field: t.a[1], defVal: "" };
+        }
+        if (mapName === "num1") { var mm = /^\(?\s*(\d+)\s*\)?/.exec(raw); val = mm ? mm[1] : (/^\d+$/.test(raw) ? raw : "1"); }
+        else if (mapName && M[mapName]) {
+          val = M[mapName][norm(raw)];
+          if (val === undefined) {
+            if (mapName === "key" && raw.length === 1) val = raw.toLowerCase();
+            else if (mapName === "lang") val = raw.length <= 5 ? raw.toLowerCase() : null;
+            else if (mapName === "target") val = raw; // nome di uno sprite
+            else val = null;
+            if (val === null) return null;
+          }
+        } else val = raw;
+        if (kind === "costume") ctx.noteCostume(raw);
+        if (kind === "backdrop") ctx.noteBackdrop(raw);
+        if (kind === "sound") ctx.noteSound(raw);
+        if (mapName === "target" && val === raw) ctx.noteSpriteRef(raw);
+        return { menu: val, shadowOp: t.a[0], field: t.a[1], text: raw };
+      case "color":
+        if (k.p === undefined) return null;
+        raw = k.p.trim();
+        if (/^#[0-9a-f]{6}$/i.test(raw)) val = raw.toLowerCase();
+        else val = COLORS[norm(raw)] || "#9966ff";
+        return { color: val };
+      case "note":
+        if (k.p === undefined) return null;
+        return { note: (/\d+/.exec(k.p) || ["60"])[0] };
+      default: // num int whole pnum angle text
+        if (k.p === undefined) {
+          if (k.w !== undefined && /^-?\d+([.,]\d+)?$/.test(k.w)) return { lit: k.w.replace(",", ".") };
+          return null;
+        }
+        if (/▾/.test(k.p)) { // variabile scritta con la freccia
+          raw = k.p.replace(/▾/g, "").trim();
+          if (ctx.isVar(raw)) return { variable: raw };
+          if (ctx.isList(raw)) return { listRep: raw };
+        }
+        return this.parseExpr(k.p, t.type);
+    }
+  };
+
+  // interpreta il contenuto di una parentesi: argomento, variabile, lista, blocco valore o testo
+  Parser.prototype.parseExpr = function (content, type, onlyBlock) {
+    var ctx = this.ctx, trimmed = content.trim();
+    if (type === "bool") {
+      var rb = this.parseBlockText(trimmed, ["boolean"]);
+      if (rb) return rb;
+      if (ctx.isArg(trimmed)) return { arg: trimmed };
+      throw new Error("condizione non riconosciuta: <" + trimmed + ">");
+    }
+    if (trimmed !== "") {
+      if (ctx.isArg(trimmed)) return { arg: trimmed };
+      if (ctx.isVar(trimmed)) return { variable: trimmed };
+      if (ctx.isList(trimmed)) return { listRep: trimmed };
+      var r = null;
+      if (/[()<>]|\s/.test(trimmed) || /^[a-zà-ù]+$/i.test(trimmed)) r = this.parseBlockText(trimmed, ["reporter", "boolean"]);
+      if (r) return r;
+    }
+    if (onlyBlock) return null;
+    var lit = content;
+    if (/\S\s+[-+*\/×:]\s+\S/.test(trimmed) && /\d/.test(trimmed)) ctx.warn("«" + trimmed + "» è stato letto come testo: per un calcolo ogni numero va tra parentesi, per esempio (0.1) + (0.2)");
+    if (/^(num|int|whole|pnum|angle)$/.test(type)) {
+      lit = trimmed;
+      if (/^-?\d+,\d+$/.test(lit)) { ctx.warn("numero con la virgola «" + lit + "» convertito con il punto"); lit = lit.replace(",", "."); }
+    }
+    return { lit: lit };
+  };
+
+  // prova tutti i modelli del tipo richiesto; restituisce {block: ...}
+  Parser.prototype.parseBlockText = function (text, kinds) {
+    var toks;
+    try { toks = tokenize(text); } catch (e) { return null; }
+    if (!toks.length) return null;
+    var best = null, i;
+    for (i = 0; i < B.length; i++) {
+      var b = B[i];
+      if (kinds.indexOf(b.kind === "c" || b.kind === "hat" ? b.kind : b.kind) < 0) continue;
+      var args;
+      try { args = this.matchTemplate(b, toks); } catch (e) { args = null; }
+      if (args) { if (!best || b.nWords > best.b.nWords) best = { b: b, args: args }; if (!b.alias) break; }
+    }
+    if (!best && (kinds.indexOf("stack") >= 0 || kinds.indexOf("reporter") >= 0)) {
+      var call = this.ctx.matchCall(toks, this);
+      if (call) return call;
+    }
+    if (!best) return null;
+    if (best.b.alias) this.ctx.warn("«" + text + "»: la dicitura dell'editor italiano è «" + best.b.alias + "»");
+    if (best.b.ext) this.ctx.ext[best.b.ext] = true;
+    return { block: best.b, args: best.args };
+  };
+
+  // ---------- contesto di uno sprite ----------
+  function Ctx(project, sprite) {
+    this.project = project; this.sprite = sprite;
+    this.ext = project.ext; this.args = null;
+  }
+  Ctx.prototype.isVar = function (n) { return this.project.vars.has(n) || this.sprite.localVars.has(n); };
+  Ctx.prototype.isList = function (n) { return this.project.lists.has(n); };
+  Ctx.prototype.isArg = function (n) { return !!(this.args && this.args.indexOf(n) >= 0); };
+  Ctx.prototype.noteVar = function (n) { if (!this.sprite.localVars.has(n)) this.project.vars.add(n); };
+  Ctx.prototype.noteList = function (n) { this.project.lists.add(n); };
+  Ctx.prototype.noteBroadcast = function (n) { this.project.broadcasts.add(n); };
+  Ctx.prototype.noteCostume = function (n) { this.sprite.costumes.add(n); };
+  Ctx.prototype.noteBackdrop = function (n) { this.project.backdrops.add(n); };
+  Ctx.prototype.noteSound = function (n) { this.sprite.sounds.add(n); };
+  Ctx.prototype.noteSpriteRef = function (n) { this.project.spriteRefs.add(n); };
+  Ctx.prototype.warn = function (m) { this.project.curWarn.push(m); };
+  Ctx.prototype.matchCall = function (toks, parser) {
+    var procs = this.sprite.procs, i, j;
+    for (i = 0; i < procs.length; i++) {
+      var pr = procs[i];
+      if (pr.parts.length !== toks.length) continue;
+      var ok = true, args = [];
+      for (j = 0; j < toks.length; j++) {
+        var part = pr.parts[j], tk = toks[j];
+        if (part.w !== undefined) { if (tk.w === undefined || norm(tk.w) !== norm(part.w)) { ok = false; break; } }
+        else { if (tk.p === undefined) { ok = false; break; } args.push(parser.parseExpr(tk.p, "text")); }
+      }
+      if (ok) return { call: pr, callArgs: args };
+    }
+    return null;
+  };
+
+  function isCap(it) {
+    if (!it.block) return false;
+    if (it.block.cap) return true;
+    if (it.block.op === "control_stop") { var f = it.args.STOP_OPTION; return !f || f.field !== "other scripts in sprite"; }
+    return false;
+  }
+
+  // ---------- lettura del testo incollato ----------
+  var CATS = ["i miei blocchi", "da testo a voce", "situazioni", "movimento", "aspetto", "suono", "controllo", "sensori", "operatori", "variabili", "liste", "lista", "penna", "musica", "traduci", "estensioni", "estensione"];
+
+  function cleanLine(line) {
+    var s = line.replace(/\t/g, "    ");
+    s = s.replace(/^\s*(?:[-*•]|\d+[.)])\s+/, "");     // elenco puntato o numerato
+    s = s.replace(/`/g, "").replace(/\*\*|__/g, "");
+    // via emoji e simboli in testa
+    s = s.replace(/^[\s -⯿⸀-⹿　-〿️‍]*(?:[\uD83C-\uDBFF][\uDC00-\uDFFF][️‍]*)*/, "");
+    return s.trim();
+  }
+  function stripCategory(s) {
+    var low = s.toLowerCase();
+    for (var i = 0; i < CATS.length; i++) {
+      var c = CATS[i];
+      if (low.indexOf(c) === 0) {
+        var rest = s.slice(c.length);
+        if (/^\s*[:·|-]\s*/.test(rest) || /^\s{2,}/.test(rest) || /^\s+\S/.test(rest)) return rest.replace(/^\s*[:·|-]?\s*/, "");
+        if (rest.trim() === "") return "";
+      }
+    }
+    return null;
+  }
+
+  function splitScripts(text) {
+    var lines = text.replace(/\r\n?/g, "\n").split("\n");
+    var hasFence = /```/.test(text);
+    var inFence = !hasFence, scripts = [], cur = null, fenceHasHeader = false, fenceBuf = [];
+    function flushHeaderless() {
+      // blocco di codice senza «SPRITE:»: lo si legge se contiene un blocco cappello
+      if (!fenceHasHeader && fenceBuf.some(function (b) { return /^(quando |definisci )/i.test(stripCategory(b.text) || b.text); })) {
+        var sc = { sprite: "Sprite1", lines: fenceBuf.filter(function (b) { return b.text !== ""; }), headerLine: fenceBuf[0].n, noHeader: true };
+        scripts.push(sc);
+      }
+      fenceBuf = []; fenceHasHeader = false;
+    }
+    lines.forEach(function (line, idx) {
+      var t = line.trim();
+      if (/^```/.test(t)) {
+        if (inFence && hasFence) flushHeaderless();
+        inFence = !inFence; if (!inFence) cur = null; return;
+      }
+      if (!inFence) return;
+      var c = cleanLine(t);
+      if (/^(\/\/|#)/.test(c)) return; // commento
+      if (!cur && hasFence && c !== "") fenceBuf.push({ n: idx + 1, raw: line.replace(/\s+$/, ""), text: c });
+      var h = /^sprite\s*[:\-–]\s*(.+)$/i.exec(c), hs = /^(lo\s+)?stage\b\s*([·:•|–-].*)?$/i.exec(c);
+      if (h || hs) {
+        var name;
+        if (hs) name = "Stage";
+        else name = h[1].split(/\s+[·•|–-]\s+|·/)[0].replace(/[*_]/g, "").trim() || "Sprite1";
+        if (/^(lo\s+)?stage$/i.test(name)) name = "Stage";
+        cur = { sprite: name, lines: [], headerLine: idx + 1 };
+        scripts.push(cur); fenceHasHeader = true;
+        return;
+      }
+      if (!cur) return;
+      if (c === "") return;
+      var prose = !/[(\[<]/.test(c) && (c.split(/\s+/).length >= 7 || /[.:!?;]$/.test(c)) && !/^(fine|altrimenti)\.?$/i.test(c);
+      cur.lines.push({ n: idx + 1, raw: line.replace(/\s+$/, ""), text: c, prose: prose });
+    });
+    if (inFence && hasFence) flushHeaderless();
+    return scripts;
+  }
+
+  // ---------- costruzione del progetto ----------
+  function convert(text, opts) {
+    opts = opts || {};
+    var project = { vars: new Set(), lists: new Set(), broadcasts: new Set(), backdrops: new Set(), spriteRefs: new Set(), ext: {}, curWarn: [] };
+    var report = [], sprites = {}, order = [];
+    var scripts = splitScripts(text);
+    if (!scripts.length) {
+      return { ok: false, error: "Non ho trovato nessuno script. Ogni script deve iniziare con una riga «SPRITE: nome» oppure «STAGE», come negli script di ScratchLab Designer.", report: [] };
+    }
+    function getSprite(name) {
+      if (!sprites[name]) {
+        sprites[name] = { name: name, isStage: name === "Stage", scripts: [], costumes: new Set(), sounds: new Set(), localVars: new Set(), procs: [] };
+        order.push(name);
+      }
+      return sprites[name];
+    }
+    // direttive: variabili locali e definizioni dei blocchi personalizzati
+    scripts.forEach(function (sc) {
+      var sp = getSprite(sc.sprite);
+      sc.sp = sp;
+      sc.lines.forEach(function (ln) {
+        var s = stripCategory(ln.text); if (s === null) s = ln.text;
+        var lv = /^(?:variabili locali|variabili solo per questo sprite|solo per questo sprite)\s*:\s*(.+)$/i.exec(ln.text) || /^(?:variabili locali|variabili solo per questo sprite|solo per questo sprite)\s*:\s*(.+)$/i.exec(s);
+        if (lv) { lv[1].split(/[,;]/).forEach(function (v) { v = v.replace(/[()▾]/g, "").trim(); if (v) sp.localVars.add(v); }); ln.directive = true; return; }
+        var dm = /^definisci\s+(.+)$/i.exec(s);
+        if (dm) {
+          var body = dm[1], warp = false;
+          if (/senza aggiornare lo schermo/i.test(body)) { warp = true; body = body.replace(/[·•|,-]?\s*(esegui\s+)?senza aggiornare lo schermo/i, "").trim(); }
+          var toks; try { toks = tokenize(body); } catch (e) { return; }
+          var parts = [], argNames = [];
+          if (toks.length && toks[0].p !== undefined && toks.every(function (t) { return t.p !== undefined; })) {
+            toks[0].p.trim().split(/\s+/).forEach(function (w) { parts.push({ w: w }); });
+            toks.slice(1).forEach(function (t) { var a = t.p.trim(); argNames.push(a); parts.push({ arg: a }); });
+          } else {
+            toks.forEach(function (t) { if (t.w !== undefined) parts.push({ w: t.w }); else if (t.p !== undefined) { var a = t.p.trim(); argNames.push(a); parts.push({ arg: a }); } });
+          }
+          var proccode = parts.map(function (p) { return p.w !== undefined ? p.w : "%s"; }).join(" ");
+          sp.procs.push({ parts: parts, argNames: argNames, proccode: proccode, warp: warp, argIds: argNames.map(function (_, i) { return "arg" + Math.random().toString(36).slice(2, 8) + i; }) });
+          ln.defProc = sp.procs[sp.procs.length - 1];
+        }
+      });
+    });
+
+    // due passate: la prima registra variabili e liste, la seconda costruisce
+    for (var pass = 0; pass < 2; pass++) {
+      report = [];
+      scripts.forEach(function (sc) {
+        var sp = sc.sp, ctx = new Ctx(project, sp), parser = new Parser(ctx);
+        if (sc.noHeader) report.push({ n: sc.headerLine, raw: "(blocco di codice senza intestazione)", ok: true, warn: ["manca la riga «SPRITE: nome»: gli script vanno nello sprite «Sprite1»"] });
+        var root = { seq: [] }, frames = [root], stacks = [root.seq], curProc = null;
+        sc.parsed = stacks;
+        sc.lines.forEach(function (ln) {
+          if (ln.directive) { report.push({ n: ln.n, raw: ln.raw, ok: true, note: "variabili solo per questo sprite" }); return; }
+          if (ln.prose) { report.push({ n: ln.n, raw: ln.raw, ok: true, warn: ["riga di testo: ignorata"] }); return; }
+          project.curWarn = [];
+          var s = stripCategory(ln.text), candidates = s === null ? [ln.text] : [s, ln.text];
+          var res = null, err = null, used = null;
+          for (var ci = 0; ci < candidates.length && !res; ci++) {
+            var c = candidates[ci];
+            if (/^fine\.?$/i.test(c) || /^altrimenti$/i.test(c)) { res = { ctl: norm(c).replace(".", "") }; used = c; break; }
+            if (ln.defProc) { res = { def: ln.defProc }; used = c; break; }
+            try {
+              var r = parser.parseBlockText(c, ["hat", "stack", "c"]);
+              if (r) { res = r; used = c; }
+            } catch (e) { err = e.message; }
+          }
+          if (!res) {
+            var why = err || "blocco non riconosciuto: controlla la dicitura con la libreria dei blocchi";
+            var po = (ln.text.match(/\(/g) || []).length, pc = (ln.text.match(/\)/g) || []).length;
+            if (po !== pc) why = "parentesi non bilanciate: " + po + " aperte e " + pc + " chiuse. " + (po > pc ? (po - pc === 1 ? "Manca una parentesi chiusa in fondo alla riga" : "Mancano " + (po - pc) + " parentesi chiuse in fondo alla riga") : "Ci sono parentesi chiuse in più: se un testo contiene parentesi, sostituiscile con i due punti o con le virgole");
+            try { if (parser.parseBlockText(candidates[0], ["reporter", "boolean"])) why = "è un blocco valore: va dentro le parentesi di un altro blocco"; } catch (e2) { }
+            report.push({ n: ln.n, raw: ln.raw, ok: false, msg: why });
+            return;
+          }
+          var top = frames[frames.length - 1];
+          if (res.ctl === "fine") {
+            if (frames.length > 1) frames.pop(); else project.curWarn.push("«fine» senza un blocco a C aperto: ignorato");
+          } else if (res.ctl === "altrimenti") {
+            var cblk = frames.length > 1 ? frames[frames.length - 1].owner : null;
+            if (cblk && cblk.block && cblk.block.op === "control_if" && !cblk.elseSeq) {
+              cblk.elseSeq = []; frames[frames.length - 1] = { seq: cblk.elseSeq, owner: cblk };
+            } else project.curWarn.push("«altrimenti» fuori da un blocco «se … allora»: ignorato");
+          } else {
+            var item = res;
+            var isHat = res.def || (res.block && res.block.kind === "hat");
+            if (isHat) {
+              if (frames.length > 1) { project.curWarn.push("script precedente chiuso automaticamente: mancava «fine»"); frames.length = 1; }
+              if (root.seq.length) { root = { seq: [] }; frames = [root]; stacks.push(root.seq); }
+              if (res.def) { ctx.args = res.def.argNames; curProc = res.def; } else { ctx.args = null; }
+              root.seq.push(item);
+            } else {
+              var cur = frames[frames.length - 1].seq, last = cur[cur.length - 1];
+              if (last && isCap(last)) {
+                project.curWarn.push("dopo «" + (last.block ? last.block.tpl.replace(/\{[^}]*\}/g, "( )") : "") + "» non si possono attaccare altri blocchi: questa parte resta staccata nello sprite");
+                if (frames.length === 1) { root = { seq: [] }; frames = [root]; stacks.push(root.seq); cur = root.seq; }
+              }
+              cur.push(item);
+              if (res.block && res.block.kind === "c") { item.subSeq = []; frames.push({ seq: item.subSeq, owner: item }); }
+            }
+          }
+          report.push({ n: ln.n, raw: ln.raw, ok: true, warn: project.curWarn.slice(), as: used });
+        });
+        if (frames.length > 1) report.push({ n: sc.lines.length ? sc.lines[sc.lines.length - 1].n : sc.headerLine, raw: "(fine dello script)", ok: true, warn: [(frames.length === 2 ? "manca una riga «fine»" : "mancano " + (frames.length - 1) + " righe «fine»") + ": chiuse automaticamente"] });
+      });
+    }
+
+    // ---------- da albero a blocchi sb3 ----------
+    var idc = 0; function nid() { idc++; return "b" + idc.toString(36) + Math.random().toString(36).slice(2, 6); }
+    var varIds = {}, listIds = {}, bcIds = {};
+    project.vars.forEach(function (v) { varIds["g:" + v] = nid(); });
+    project.lists.forEach(function (v) { listIds[v] = nid(); });
+    project.broadcasts.forEach(function (v) { bcIds[v] = nid(); });
+    order.forEach(function (n) { sprites[n].localVars.forEach(function (v) { varIds[n + ":" + v] = nid(); }); });
+    function varId(sp, v) { return varIds[sp.name + ":" + v] || varIds["g:" + v] || (varIds["g:" + v] = nid()); }
+    var SHADOW = { num: [4, "0"], int: [7, ""], whole: [6, "10"], pnum: [5, "1"], angle: [8, "90"], text: [10, ""] };
+
+    function emitSeq(sp, seq, parent, blocks, top) {
+      var first = null, prev = null;
+      seq.forEach(function (item, i) {
+        var id = emitItem(sp, item, prev || parent, blocks, top && i === 0);
+        if (!id) return;
+        if (prev) blocks[prev].next = id; else first = id;
+        prev = id;
+      });
+      return first;
+    }
+    function emitItem(sp, item, parent, blocks, isTop) {
+      var id = nid();
+      if (item.def) return emitDef(sp, item.def, id, blocks);
+      if (item.call) return emitCall(sp, item, id, parent, blocks, isTop);
+      var b = item.block, args = item.args, blk = { opcode: b.op, next: null, parent: isTop ? null : parent, inputs: {}, fields: {}, shadow: false, topLevel: !!isTop };
+      blocks[id] = blk;
+      if (isTop) { blk.x = 0; blk.y = 0; }
+      var op = b.op;
+      if (op === "control_if" && item.elseSeq) blk.opcode = op = "control_if_else";
+      b.toks.forEach(function (t) {
+        if (t.slot === undefined) return;
+        var v = args[t.slot];
+        if (t.type === "flag") return;
+        setSlot(sp, blk, id, t, v, blocks);
+      });
+      if (op === "control_stop") {
+        var so = blk.fields.STOP_OPTION ? blk.fields.STOP_OPTION[0] : "all";
+        blk.mutation = { tagName: "mutation", children: [], hasnext: so === "other scripts in sprite" ? "true" : "false" };
+      }
+      if (item.subSeq) { var s1 = emitSeq(sp, item.subSeq, id, blocks, false); if (s1) blk.inputs.SUBSTACK = [2, s1]; }
+      if (item.elseSeq) { var s2 = emitSeq(sp, item.elseSeq, id, blocks, false); if (s2) blk.inputs.SUBSTACK2 = [2, s2]; }
+      return id;
+    }
+    function shadowFor(type) { var s = SHADOW[type] || SHADOW.text; return [s[0], s[1]]; }
+    function setSlot(sp, blk, id, t, v, blocks) {
+      var name = t.slot;
+      switch (t.type) {
+        case "bool":
+          if (v && !v.empty) { var bid = emitValue(sp, v, id, blocks); if (bid) blk.inputs[name] = [2, bid]; }
+          return;
+        case "var": blk.fields[name] = [v.variable, varId(sp, v.variable)]; return;
+        case "list": blk.fields[name] = [v.list, listIds[v.list]]; return;
+        case "bcastf": blk.fields[name] = [v.broadcast, bcIds[v.broadcast]]; return;
+        case "bcast": blk.inputs[name] = [1, [11, v.broadcast, bcIds[v.broadcast]]]; return;
+        case "field": blk.fields[name] = [v.field, (name === "VARIABLE" ? varId(sp, v.field) : null)]; return;
+        case "color": blk.inputs[name] = [1, [9, v.color]]; return;
+        case "note": {
+          var nidn = nid(); blocks[nidn] = { opcode: "note", next: null, parent: id, inputs: {}, fields: { NOTE: [v.note, null] }, shadow: true, topLevel: false };
+          blk.inputs[name] = [1, nidn]; return;
+        }
+        case "menu": {
+          var sid = nid();
+          var sv = v.menuBlock ? defaultMenu(t) : v.menu;
+          blocks[sid] = { opcode: t.a[0], next: null, parent: id, inputs: {}, fields: {}, shadow: true, topLevel: false };
+          blocks[sid].fields[t.a[1]] = [sv, null];
+          if (v.menuBlock) { var rb = emitValue(sp, v.menuBlock, id, blocks); blk.inputs[name] = [3, rb, sid]; }
+          else blk.inputs[name] = [1, sid];
+          return;
+        }
+        default: {
+          var sh = shadowFor(t.type);
+          if (v.lit !== undefined) { sh[1] = String(v.lit); blk.inputs[name] = [1, sh]; return; }
+          if (v.variable !== undefined) { blk.inputs[name] = [3, [12, v.variable, varId(sp, v.variable)], sh]; return; }
+          if (v.listRep !== undefined) { blk.inputs[name] = [3, [13, v.listRep, listIds[v.listRep]], sh]; return; }
+          var rid = emitValue(sp, v, id, blocks);
+          blk.inputs[name] = [3, rid, sh];
+        }
+      }
+    }
+    function defaultMenu(t) {
+      var d = { motion_goto_menu: "_random_", motion_glideto_menu: "_random_", motion_pointtowards_menu: "_mouse_", sensing_touchingobjectmenu: "_mouse_", sensing_distancetomenu: "_mouse_", control_create_clone_of_menu: "_myself_", sensing_of_object_menu: "_stage_", sensing_keyoptions: "space" };
+      return d[t.a[0]] || "";
+    }
+    function emitValue(sp, v, parent, blocks) {
+      if (v.arg !== undefined) {
+        var aid = nid();
+        blocks[aid] = { opcode: "argument_reporter_string_number", next: null, parent: parent, inputs: {}, fields: { VALUE: [v.arg, null] }, shadow: false, topLevel: false };
+        return aid;
+      }
+      if (v.variable !== undefined || v.listRep !== undefined) {
+        // variabile dentro una condizione: serve un confronto, la si lascia come valore
+        return null;
+      }
+      if (v.call) { var cid = nid(); return emitCall(sp, v, cid, parent, blocks, false); }
+      return emitItem(sp, v, parent, blocks, false);
+    }
+    function emitDef(sp, pr, id, blocks) {
+      var pid = nid();
+      blocks[id] = { opcode: "procedures_definition", next: null, parent: null, inputs: { custom_block: [1, pid] }, fields: {}, shadow: false, topLevel: true, x: 0, y: 0 };
+      var proto = { opcode: "procedures_prototype", next: null, parent: id, inputs: {}, fields: {}, shadow: true, topLevel: false,
+        mutation: { tagName: "mutation", children: [], proccode: pr.proccode, argumentids: JSON.stringify(pr.argIds), argumentnames: JSON.stringify(pr.argNames), argumentdefaults: JSON.stringify(pr.argNames.map(function () { return ""; })), warp: pr.warp ? "true" : "false" } };
+      blocks[pid] = proto;
+      pr.argIds.forEach(function (aid, i) {
+        var rid = nid();
+        blocks[rid] = { opcode: "argument_reporter_string_number", next: null, parent: pid, inputs: {}, fields: { VALUE: [pr.argNames[i], null] }, shadow: true, topLevel: false };
+        proto.inputs[aid] = [1, rid];
+      });
+      return id;
+    }
+    function emitCall(sp, item, id, parent, blocks, isTop) {
+      var pr = item.call;
+      var blk = { opcode: "procedures_call", next: null, parent: isTop ? null : parent, inputs: {}, fields: {}, shadow: false, topLevel: !!isTop,
+        mutation: { tagName: "mutation", children: [], proccode: pr.proccode, argumentids: JSON.stringify(pr.argIds), warp: pr.warp ? "true" : "false" } };
+      if (isTop) { blk.x = 0; blk.y = 0; }
+      blocks[id] = blk;
+      pr.argIds.forEach(function (aid, i) { setSlot(sp, blk, id, { slot: aid, type: "text" }, item.callArgs[i] || { lit: "" }, blocks); });
+      return id;
+    }
+
+    // ---------- risorse: costumi, sfondi, suoni ----------
+    var assets = {};
+    var PAL = ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9", "#7A5195", "#2F4B7C"];
+    function svgCostume(spriteName, costumeName, idx, color) {
+      var full = (costumeName || spriteName || "?").trim();
+      var m = /^.+?\s+([A-Za-z0-9]{1,2})$/.exec(full);
+      var label = xmlEsc(m ? m[1].toUpperCase() : (full.charAt(0).toUpperCase() || "?"));
+      var small = full.length > 13 ? full.slice(0, 12) + "…" : full;
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' +
+        '<rect x="4" y="4" width="88" height="88" rx="20" fill="' + color + '" stroke="#16203A" stroke-width="4"/>' +
+        '<text x="48" y="' + (label.length > 1 ? 54 : 58) + '" font-family="Sans Serif" font-size="' + (label.length > 1 ? 34 : 44) + '" font-weight="bold" fill="#FFFFFF" text-anchor="middle">' + label + '</text>' +
+        '<text x="48" y="80" font-family="Sans Serif" font-size="11" fill="#FFFFFF" text-anchor="middle">' + xmlEsc(small) + '</text></svg>';
+    }
+    function svgBackdrop(name) {
+      if (/xy|grid|griglia|cartesian/i.test(name)) {
+        var g = '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360"><rect width="480" height="360" fill="#FFFFFF"/>';
+        for (var x = 0; x <= 480; x += 20) g += '<line x1="' + x + '" y1="0" x2="' + x + '" y2="360" stroke="#D9DEE8" stroke-width="1"/>';
+        for (var y = 0; y <= 360; y += 20) g += '<line x1="0" y1="' + y + '" x2="480" y2="' + y + '" stroke="#D9DEE8" stroke-width="1"/>';
+        g += '<line x1="0" y1="180" x2="480" y2="180" stroke="#16203A" stroke-width="2"/><line x1="240" y1="0" x2="240" y2="360" stroke="#16203A" stroke-width="2"/>';
+        return g + '</svg>';
+      }
+      if (name === "sfondo1") return '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360"><rect width="480" height="360" fill="#FFFFFF"/></svg>';
+      var esc = String(name).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360"><rect width="480" height="360" fill="#F4F6FA"/>' +
+        '<rect x="10" y="326" width="460" height="24" rx="6" fill="#FFFFFF" stroke="#D9DEE8"/>' +
+        '<text x="240" y="343" font-family="Sans Serif" font-size="13" fill="#4A5570" text-anchor="middle">Sfondo provvisorio «' + esc + '»: sostituiscilo dalla libreria</text></svg>';
+    }
+    function silentWav() {
+      var rate = 22050, n = 2205, buf = new Uint8Array(44 + n * 2), dv = new DataView(buf.buffer);
+      function str(o, s) { for (var i = 0; i < s.length; i++) buf[o + i] = s.charCodeAt(i); }
+      str(0, "RIFF"); dv.setUint32(4, 36 + n * 2, true); str(8, "WAVE"); str(12, "fmt "); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+      dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); str(36, "data"); dv.setUint32(40, n * 2, true);
+      return { data: buf, rate: rate, sampleCount: n };
+    }
+    function addSvg(svg) { var m = md5(svg); assets[m + ".svg"] = svg; return m; }
+    function costumeObj(name, svg, cx, cy) { var m = addSvg(svg); return { name: name, bitmapResolution: 1, dataFormat: "svg", assetId: m, md5ext: m + ".svg", rotationCenterX: cx, rotationCenterY: cy }; }
+    var wav = silentWav(), wavMd5 = md5(wav.data); assets[wavMd5 + ".wav"] = wav.data;
+    function soundObj(name) { return { name: name, assetId: wavMd5, dataFormat: "wav", format: "", rate: wav.rate, sampleCount: wav.sampleCount, md5ext: wavMd5 + ".wav" }; }
+
+    // ---------- bersagli ----------
+    if (!sprites.Stage) { getSprite("Stage"); order.splice(order.indexOf("Stage"), 1); order.unshift("Stage"); }
+    else { order.splice(order.indexOf("Stage"), 1); order.unshift("Stage"); }
+    // sprite citati nei menu ma senza script
+    project.spriteRefs.forEach(function (n) { if (!sprites[n] && !/^_/.test(n)) { getSprite(n); report.push({ n: 0, raw: "(sprite «" + n + "»)", ok: true, warn: ["sprite citato in un menu e creato vuoto"] }); } });
+
+    var targets = [], spriteIndex = 0;
+    order.forEach(function (name) {
+      var sp = sprites[name], blocks = {}, y = 0;
+      scripts.filter(function (sc) { return sc.sp === sp; }).forEach(function (sc) {
+        sc.parsed.forEach(function (seq) {
+          if (!seq.length) return;
+          var first = emitSeq(sp, seq, null, blocks, true);
+          if (first) { blocks[first].x = 40; blocks[first].y = y; y += 60 + countDeep(seq) * 48; }
+        });
+      });
+      var t = { isStage: sp.isStage, name: sp.isStage ? "Stage" : name, variables: {}, lists: {}, broadcasts: {}, blocks: blocks, comments: {}, currentCostume: 0, costumes: [], sounds: [], volume: 100, layerOrder: sp.isStage ? 0 : ++spriteIndex };
+      if (sp.isStage) {
+        project.vars.forEach(function (v) { t.variables[varIds["g:" + v]] = [v, 0]; });
+        project.lists.forEach(function (v) { t.lists[listIds[v]] = [v, []]; });
+        project.broadcasts.forEach(function (v) { t.broadcasts[bcIds[v]] = v; });
+        var bds = Array.from(project.backdrops); if (!bds.length) bds = ["sfondo1"];
+        t.costumes = bds.map(function (b) { return costumeObj(b, svgBackdrop(b), 240, 180); });
+        t.tempo = 60; t.videoTransparency = 50; t.videoState = "on"; t.textToSpeechLanguage = null;
+      } else {
+        sp.localVars.forEach(function (v) { t.variables[varIds[name + ":" + v]] = [v, 0]; });
+        var cs = Array.from(sp.costumes); if (!cs.length) cs = ["costume1"];
+        var col = PAL[(spriteIndex - 1) % PAL.length];
+        t.costumes = cs.map(function (c, i) { return costumeObj(c, svgCostume(name, cs.length > 1 ? c : name, i, cs.length > 1 ? PAL[(spriteIndex - 1 + i) % PAL.length] : col), 48, 48); });
+        t.visible = true; t.x = -180 + ((spriteIndex - 1) % 4) * 120; t.y = 100 - Math.floor((spriteIndex - 1) / 4) * 120; t.size = 100; t.direction = 90; t.draggable = false; t.rotationStyle = "all around";
+      }
+      t.sounds = Array.from(sp.sounds).map(soundObj);
+      targets.push(t);
+    });
+    function countDeep(seq) { var n = 0; seq.forEach(function (it) { n++; if (it.subSeq) n += countDeep(it.subSeq) + 1; if (it.elseSeq) n += countDeep(it.elseSeq) + 1; }); return n; }
+
+    var extensions = Object.keys(project.ext);
+    var monitors = [];
+    var pj = { targets: targets, monitors: monitors, extensions: extensions, meta: { semver: "3.0.0", vm: "0.2.0", agent: "ScratchLab Convertitore (www.edugem.it)" } };
+
+    // ---------- controlli sulla logica del progetto ----------
+    // Non bastano diciture giuste: questi controlli cercano gli schemi che rompono i giochi
+    // (file 07 §1 di ScratchLab Designer). Sono avvisi: il file .sb3 si crea comunque.
+    (function () {
+      var WR = { data_setvariableto: "VARIABLE", data_changevariableby: "VARIABLE", data_addtolist: "LIST", data_deleteoflist: "LIST", data_deletealloflist: "LIST", data_insertatlist: "LIST", data_replaceitemoflist: "LIST" };
+      var WAIT = { looks_sayforsecs: 1, looks_thinkforsecs: 1, motion_glidesecstoxy: 1, motion_glideto: 1, control_wait: 1, control_wait_until: 1, sound_playuntildone: 1, text2speech_speakAndWait: 1, event_broadcastandwait: 1, sensing_askandwait: 1, music_playNoteForBeats: 1, music_playDrumForBeats: 1, music_restForBeats: 1 };
+      var scripts = [];
+      function bcastName(x) { var v = x.inputs.BROADCAST_INPUT; if (!v) return null; v = v[1]; return Array.isArray(v) && v[0] === 11 ? v[1] : null; }
+      targets.forEach(function (t) {
+        var local = t.isStage ? new Set() : new Set(Object.keys(t.variables).map(function (k) { return t.variables[k][0]; }));
+        Object.keys(t.blocks).forEach(function (id) {
+          var hb = t.blocks[id];
+          if (!hb || !hb.topLevel || !/^(event_|control_start_as_clone|procedures_definition)/.test(hb.opcode)) return;
+          var sc = { t: t, sprite: t.name, hat: hb.opcode, msg: hb.fields.BROADCAST_OPTION ? hb.fields.BROADCAST_OPTION[0] : null, key: hb.fields.KEY_OPTION ? hb.fields.KEY_OPTION[0] : null,
+            w: new Set(), r: new Set(), sends: [], ops: [], local: local, waitSeen: false, writeAfterWait: null, unguarded: null, lateIf: false };
+          var seen = {};
+          // le letture dentro «per sempre» si correggono da sole al giro dopo: non contano
+          function walkExpr(bid, loop) {
+            var x = t.blocks[bid]; if (!x || seen[bid]) return; seen[bid] = 1;
+            if (x.fields.LIST && !loop) sc.r.add(x.fields.LIST[0]);
+            if (x.opcode === "data_variable" && x.fields.VARIABLE && !loop) sc.r.add(x.fields.VARIABLE[0]);
+            Object.keys(x.inputs).forEach(function (k) { x.inputs[k].slice(1).forEach(function (v) {
+              if (Array.isArray(v) && (v[0] === 12 || v[0] === 13)) { if (!loop) sc.r.add(v[1]); }
+              else if (typeof v === "string" && t.blocks[v]) walkExpr(v, loop);
+            }); });
+          }
+          (function walk(bid, depth, loop) {
+            while (bid && !seen[bid]) {
+              seen[bid] = 1; var x = t.blocks[bid]; if (!x) return;
+              sc.ops.push(x.opcode);
+              var isWrite = !!WR[x.opcode], isSend = x.opcode === "event_broadcast" || x.opcode === "event_broadcastandwait";
+              if (isWrite && x.fields[WR[x.opcode]]) sc.w.add(x.fields[WR[x.opcode]][0]);
+              if (!isWrite && x.fields.LIST && !loop) sc.r.add(x.fields.LIST[0]);
+              if (isSend) { var nm = bcastName(x); if (nm) sc.sends.push(nm); }
+              if ((isWrite && x.opcode !== "data_deletealloflist") || x.opcode === "event_broadcast") {
+                if (sc.waitSeen && !sc.writeAfterWait) sc.writeAfterWait = isWrite ? ({ data_setvariableto: "porta (", data_changevariableby: "cambia (", data_addtolist: "aggiungi a (", data_deleteoflist: "cancella da (", data_insertatlist: "inserisci in (", data_replaceitemoflist: "sostituisci in (" }[x.opcode] || "(") + x.fields[WR[x.opcode]][0] + " ▾)" : "invia a tutti (" + (bcastName(x) || "") + " ▾)";
+                if (depth === 0 && !sc.unguarded && (x.opcode === "data_changevariableby" || x.opcode === "event_broadcast")) { sc.unguarded = x.opcode === "event_broadcast" ? "invia a tutti (" + (bcastName(x) || "") + ")" : "cambia (" + x.fields.VARIABLE[0] + ")"; sc.unguardedMsg = x.opcode === "event_broadcast" ? bcastName(x) : null; }
+              }
+              if (WAIT[x.opcode] && !(x.opcode === "control_wait_until" && sc.ops.length === 1)) sc.waitSeen = true;
+              Object.keys(x.inputs).forEach(function (k) {
+                var v = x.inputs[k][1];
+                if (k === "SUBSTACK" || k === "SUBSTACK2") { if (typeof v === "string") walk(v, depth + 1, loop || x.opcode === "control_forever"); }
+                else x.inputs[k].slice(1).forEach(function (v2) {
+                  if (Array.isArray(v2) && (v2[0] === 12 || v2[0] === 13)) { if (!loop) sc.r.add(v2[1]); }
+                  else if (typeof v2 === "string" && t.blocks[v2]) walkExpr(v2, loop);
+                });
+              });
+              bid = x.next;
+            }
+          })(hb.next, 0, false);
+          scripts.push(sc);
+        });
+      });
+      var q = function (a) { return a.map(function (x) { return "«" + x + "»"; }).join(", "); };
+      function add(raw, msg) { report.push({ n: 0, raw: raw, ok: true, warn: [msg] }); }
+
+      // 1. stesso avvio (bandiera verde o stesso messaggio): chi legge può partire prima di chi prepara
+      var groups = {}, gorder = [];
+      scripts.forEach(function (W) {
+        if (W.hat !== "event_whenbroadcastreceived" && W.hat !== "event_whenflagclicked") return;
+        scripts.forEach(function (R) {
+          if (W === R || W.hat !== R.hat || W.msg !== R.msg || W.sprite === R.sprite) return;
+          var shared = []; W.w.forEach(function (v) { if (R.r.has(v) && !R.w.has(v) && !W.local.has(v) && !R.local.has(v)) shared.push(v); });
+          if (!shared.length) return;
+          var key = W.hat + "|" + W.msg + "|" + W.sprite;
+          if (!groups[key]) { groups[key] = { flag: W.hat === "event_whenflagclicked", msg: W.msg, w: W.sprite, readers: [], vars: [] }; gorder.push(key); }
+          var g = groups[key];
+          if (g.readers.indexOf(R.sprite) < 0) g.readers.push(R.sprite);
+          shared.forEach(function (v) { if (g.vars.indexOf(v) < 0) g.vars.push(v); });
+        });
+      });
+      gorder.forEach(function (k) {
+        var g = groups[k], more = g.readers.length > 1, hatTxt = g.flag ? "quando si clicca su 🏁" : "quando ricevo (" + g.msg + " ▾)";
+        add(hatTxt + " in «" + g.w + "» e in " + q(g.readers),
+          "il gioco può mostrare i valori della volta prima. " + (g.flag ? "La bandiera verde" : "Il messaggio «" + g.msg + "»") + " fa partire nello stesso momento «" + g.w + "», che prepara " + q(g.vars) + ", e " + q(g.readers) + ", che " + (more ? "li usano" : "li usa") + ": Scratch non garantisce quale script parte per primo. Rimedio: in fondo allo script «" + hatTxt + "» di «" + g.w + "» aggiungi «invia a tutti (dati pronti ▾)»; in " + q(g.readers) + " sostituisci il cappello con «quando ricevo (dati pronti ▾)»");
+      });
+
+      // 2. messaggi inviati senza chi li riceve, e ricevuti senza chi li invia
+      var sent = {}, recv = {};
+      scripts.forEach(function (s) { s.sends.forEach(function (m) { sent[m] = sent[m] || s.sprite; }); if (s.hat === "event_whenbroadcastreceived") recv[s.msg] = recv[s.msg] || s.sprite; });
+      Object.keys(sent).forEach(function (m) { if (!recv[m]) add("invia a tutti (" + m + " ▾) in «" + sent[m] + "»", "nessuno script parte da «quando ricevo (" + m + " ▾)»: il messaggio non fa succedere niente. Controlla che il nome sia scritto uguale nei due blocchi."); });
+      Object.keys(recv).forEach(function (m) { if (!sent[m]) add("quando ricevo (" + m + " ▾) in «" + recv[m] + "»", "nessuno script invia «" + m + "»: questo script non parte mai. Controlla che il nome sia scritto uguale nei due blocchi."); });
+
+      // 3. liste che si allungano a ogni partita
+      var addL = {}, clearL = {};
+      scripts.forEach(function (s) { s.t && Object.keys(s.t.blocks).length; });
+      targets.forEach(function (t) { Object.keys(t.blocks).forEach(function (id) { var x = t.blocks[id]; if (!x || !x.fields || !x.fields.LIST) return;
+        if (x.opcode === "data_addtolist" || x.opcode === "data_insertatlist") addL[x.fields.LIST[0]] = addL[x.fields.LIST[0]] || t.name;
+        if (x.opcode === "data_deletealloflist") clearL[x.fields.LIST[0]] = true; }); });
+      Object.keys(addL).forEach(function (l) { if (!clearL[l]) add("lista «" + l + "» in «" + addL[l] + "»", "si aggiungono elementi ma la lista non si svuota mai: a ogni partita gli elementi si ripetono. Rimedio: «cancella tutto da (" + l + " ▾)» all'inizio dello script che la riempie."); });
+
+      // 4. variabili che si cambiano ma non si azzerano mai
+      var chg = {}, setv = {};
+      targets.forEach(function (t) { Object.keys(t.blocks).forEach(function (id) { var x = t.blocks[id]; if (!x || !x.fields || !x.fields.VARIABLE) return;
+        if (x.opcode === "data_changevariableby") chg[x.fields.VARIABLE[0]] = chg[x.fields.VARIABLE[0]] || t.name;
+        if (x.opcode === "data_setvariableto") setv[x.fields.VARIABLE[0]] = true; }); });
+      Object.keys(chg).forEach(function (v) { if (!setv[v]) add("variabile «" + v + "» in «" + chg[v] + "»", "cambia durante il gioco ma non si azzera mai: alla partita successiva riparte dal valore vecchio. Rimedio: «porta (" + v + " ▾) a (0)» dopo la bandiera verde."); });
+
+      // 5. sprite che si nascondono e non si mostrano più
+      targets.forEach(function (t) { if (t.isStage) return; var hide = false, show = false, flag = false;
+        scripts.forEach(function (s) { if (s.t !== t) return; if (s.hat === "event_whenflagclicked") flag = true;
+          if (s.ops.indexOf("looks_show") >= 0) show = true;
+          if (s.ops.indexOf("looks_hide") >= 0 && s.hat !== "event_whenflagclicked") hide = true; });
+        if (hide && flag && !show) add("sprite «" + t.name + "»", "si nasconde ma nessuno script lo mostra: dalla seconda partita resta invisibile. Rimedio: «mostra» dopo la bandiera verde.");
+      });
+
+      // 6. clic e tasti: doppio clic e blocchi dopo un'attesa
+      scripts.forEach(function (s) {
+        if (s.hat !== "event_whenthisspriteclicked" && s.hat !== "event_whenkeypressed" && s.hat !== "event_whenstageclicked") return;
+        var hatTxt = s.hat === "event_whenkeypressed" ? "quando si preme il tasto" : "quando si clicca questo sprite";
+        // un messaggio inviato due volte è un problema solo se chi lo riceve conta qualcosa
+        if (s.unguarded && s.unguardedMsg && !scripts.some(function (r) { return r.hat === "event_whenbroadcastreceived" && r.msg === s.unguardedMsg && r.ops.indexOf("data_changevariableby") >= 0; })) s.unguarded = null;
+        if (s.unguarded && s.hat !== "event_whenkeypressed") add(hatTxt + " in «" + s.sprite + "»", "un clic ripetuto esegue di nuovo «" + s.unguarded + "»: un doppio clic conta due volte. Rimedio: mettere il blocco dentro «se <(turno) = (1)> allora» e portare subito «turno» a 0 (oppure una variabile «visto» per ogni sprite).");
+        if (s.writeAfterWait) add(hatTxt + " in «" + s.sprite + "»", "il blocco «" + s.writeAfterWait + "» viene dopo un blocco che fa aspettare: se si clicca di nuovo mentre aspetta, lo script riparte da capo e quel blocco non viene mai eseguito. Rimedio: prima i conti e i messaggi, poi i fumetti e i movimenti.");
+      });
+
+      // 6-bis. sprite trascinabile che deve reagire a un clic: dopo un trascinamento lo script non parte
+      targets.forEach(function (t) { if (t.isStage) return; var drag = false, click = false;
+        Object.keys(t.blocks).forEach(function (id) { var x = t.blocks[id]; if (!x) return;
+          if (x.opcode === "sensing_setdragmode" && x.fields.DRAG_MODE && x.fields.DRAG_MODE[0] === "draggable") drag = true;
+          if (x.opcode === "event_whenthisspriteclicked") click = true; });
+        if (drag && click) add("sprite «" + t.name + "»: rendi lo sprite (trascinabile ▾) e quando si clicca questo sprite", "quando uno sprite trascinabile viene trascinato e lasciato, Scratch non avvia «quando si clicca questo sprite»: il gioco non reagisce. Rimedio: «rendi lo sprite (non trascinabile ▾)» e, nello script del clic, «ripeti fino a quando <non <pulsante del mouse premuto>>» con dentro «raggiungi (puntatore del mouse ▾)», poi il controllo.");
+      });
+
+      // 7. sprite che partono sovrapposti
+      var pos = [];
+      scripts.forEach(function (s) { if (s.hat !== "event_whenflagclicked" || s.t.isStage) return;
+        var id = Object.keys(s.t.blocks).find(function (k) { var x = s.t.blocks[k]; return x && x.opcode === "motion_gotoxy" && x.parent && (function up(p) { var y = s.t.blocks[p]; return !y ? false : (y.opcode === "event_whenflagclicked" ? true : up(y.parent)); })(x.parent); });
+        if (!id) return; var x = s.t.blocks[id], X = x.inputs.X && x.inputs.X[1], Y = x.inputs.Y && x.inputs.Y[1];
+        if (Array.isArray(X) && Array.isArray(Y) && !isNaN(+X[1]) && !isNaN(+Y[1]) && !pos.some(function (p) { return p.s === s.sprite; })) pos.push({ s: s.sprite, x: +X[1], y: +Y[1] }); });
+      for (var i = 0; i < pos.length; i++) for (var j = i + 1; j < pos.length; j++)
+        if (Math.abs(pos[i].x - pos[j].x) < 60 && Math.abs(pos[i].y - pos[j].y) < 60) add("sprite «" + pos[i].s + "» e «" + pos[j].s + "»", "partono quasi nello stesso punto (" + pos[i].x + ", " + pos[i].y + ") e si coprono: allontanali di almeno 120 passi.");
+      pos.forEach(function (p) { if (Math.abs(p.x) > 230 || Math.abs(p.y) > 170) add("sprite «" + p.s + "»", "parte fuori dallo Stage (" + p.x + ", " + p.y + "): lo Stage va da -240 a 240 e da -180 a 180."); });
+    })();
+
+    var errors = report.filter(function (r) { return !r.ok; }).length;
+    var warnings = report.reduce(function (a, r) { return a + (r.warn ? r.warn.length : 0); }, 0);
+    var summary = order.map(function (n) {
+      var sp = sprites[n];
+      return { name: n, scripts: scripts.filter(function (sc) { return sc.sp === sp; }).reduce(function (a, sc) { return a + sc.parsed.filter(function (s) { return s.length; }).length; }, 0), costumes: sp.isStage ? Array.from(project.backdrops) : Array.from(sp.costumes), sounds: Array.from(sp.sounds) };
+    });
+    return { ok: errors === 0, errors: errors, warnings: warnings, report: report, project: pj, assets: assets, summary: summary,
+      vars: Array.from(project.vars), lists: Array.from(project.lists), broadcasts: Array.from(project.broadcasts), extensions: extensions,
+      scratchblocks: toScratchblocks(scripts) };
+  }
+
+  // ---------- esportazione in scratchblocks (italiano) ----------
+  function toScratchblocks(scripts) {
+    var out = [];
+    scripts.forEach(function (sc) {
+      sc.parsed.forEach(function (seq, i) {
+        if (!seq.length) return;
+        var lines = [];
+        sbSeq(seq, 0, lines);
+        out.push({ sprite: sc.sp.name, text: lines.join("\n") });
+      });
+    });
+    return out;
+  }
+  function sbSeq(seq, depth, lines) {
+    var pad = new Array(depth + 1).join("  ");
+    seq.forEach(function (it) {
+      if (it.def) { lines.push("definisci " + it.def.parts.map(function (p) { return p.w !== undefined ? p.w : "(" + p.arg + ")"; }).join(" ")); return; }
+      lines.push(pad + sbItem(it));
+      if (it.subSeq) {
+        sbSeq(it.subSeq, depth + 1, lines);
+        if (it.elseSeq) { lines.push(pad + "altrimenti"); sbSeq(it.elseSeq, depth + 1, lines); }
+        lines.push(pad + "fine");
+      }
+    });
+  }
+  function sbItem(it) {
+    if (it.call) {
+      var i = 0;
+      return it.call.parts.map(function (p) { return p.w !== undefined ? p.w : sbVal(it.callArgs[i++], { type: "text" }); }).join(" ") + " :: custom";
+    }
+    var b = it.block;
+    if (b.alias) { // per le diciture alternative si esporta quella ufficiale
+      var slots = b.toks.filter(function (x) { return x.slot; }).map(function (x) { return x.slot; }).sort().join();
+      var canon = B.filter(function (c) { return c.op === b.op && !c.alias && c.toks.filter(function (x) { return x.slot; }).map(function (x) { return x.slot; }).sort().join() === slots; })[0];
+      if (canon) b = { tpl: canon.tpl, sb: canon.sb, toks: canon.toks };
+    }
+    var tpl = b.sb || b.tpl;
+    return tpl.replace(/\{(\w+)(?::[^}]*)?\}/g, function (_, name) {
+      var t = b.toks.filter(function (x) { return x.slot === name; })[0];
+      if (!t) return "";
+      return sbVal(it.args[name], t);
+    });
+  }
+  function sbText(s) { return String(s).replace(/([\[\]()<>])/g, "\\$1"); }
+  function sbVal(v, t) {
+    if (!v) return "[]";
+    if (v.flag) return "@greenFlag";
+    if (v.empty) return "<>";
+    if (v.arg !== undefined) return "(" + v.arg + ")";
+    if (v.variable !== undefined) return t && t.type === "var" ? "[" + v.variable + " v]" : "(" + v.variable + ")";
+    if (v.list !== undefined) return "[" + v.list + " v]";
+    if (v.listRep !== undefined) return "(" + v.listRep + " :: list)";
+    if (v.broadcast !== undefined) return "[" + v.broadcast + " v]";
+    if (v.menuBlock) return sbVal(v.menuBlock, null);
+    if (v.menu === undefined && v.field !== undefined) return "[" + v.text + " v]";
+    if (v.menu !== undefined) return (t && /touching|distance|goto|glideto|pointtowards|clone|sensing_of_object|costume|backdrops|sounds|keyoptions/.test(t.a[0]) ? "(" : "[") + v.text + " v" + (t && /touching|distance|goto|glideto|pointtowards|clone|sensing_of_object|costume|backdrops|sounds|keyoptions/.test(t.a[0]) ? ")" : "]");
+    if (v.color !== undefined) return "[" + v.color + "]";
+    if (v.note !== undefined) return "(" + v.note + ")";
+    if (v.lit !== undefined) {
+      var isNum = t && /^(num|int|whole|pnum|angle)$/.test(t.type);
+      return isNum && /^-?[\d.]*$/.test(v.lit) ? "(" + v.lit + ")" : "[" + sbText(v.lit) + "]";
+    }
+    if (v.call) return "(" + sbItem(v) + ")";
+    if (v.block) return v.block.kind === "boolean" ? "<" + sbItem(v) + ">" : "(" + sbItem(v) + ")";
+    return "[]";
+  }
+
+  var api = { convert: convert, md5: md5, tokenize: tokenize, BLOCKS: B };
+  if (typeof module !== "undefined" && module.exports) module.exports = api; else root.ScratchLabEngine = api;
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>
+(function(){
+"use strict";
+var ESEMPI = {
+quiz: "ESEMPIO · quiz sulle tabelline per la 3ª primaria\n\n```\nSPRITE: Gatto · script 1 di 1\n🟡 Situazioni    quando si clicca su 🏁\n🟧 Variabili     porta (punteggio ▾) a (0)\n🟠 Controllo     ripeti (5) volte\n🟧 Variabili         porta (a ▾) a (numero a caso tra (1) e (10))\n🟧 Variabili         porta (b ▾) a (numero a caso tra (1) e (10))\n🩵 Sensori           chiedi (unione di (a) e (unione di ( x ) e (b))) e attendi\n🟠 Controllo         se <(risposta) = ((a) * (b))> allora\n🟣 Aspetto               dire (Esatto!) per (2) secondi\n🟧 Variabili             cambia (punteggio ▾) di (1)\n🟠 Controllo         altrimenti\n🟣 Aspetto               dire (unione di (Quasi! Il risultato è ) e ((a) * (b))) per (3) secondi\n🟠 Controllo         fine\n🟠 Controllo     fine\n🟣 Aspetto       dire (unione di (Punti: ) e (punteggio)) per (3) secondi\n```\n",
+storia: "ESEMPIO · linea del tempo per la 5ª primaria\n\n```\nSPRITE: Colosseo · script 1 di 2\nVARIABILI LOCALI: fatto\n🟡 Situazioni    quando si clicca su 🏁\n🟧 Variabili     porta (fatto ▾) a (0)\n🔵 Movimento     vai a x: (-180) y: (-100)\n🩵 Sensori       rendi lo sprite (non trascinabile ▾)\n🟣 Aspetto       dire (Trascinami sulla linea del tempo!) per (2) secondi\n\nSPRITE: Colosseo · script 2 di 2\n🟡 Situazioni    quando si clicca questo sprite\n🟠 Controllo     se <(fatto) = (0)> allora\n🟠 Controllo         ripeti fino a quando <non <pulsante del mouse premuto>>\n🔵 Movimento             raggiungi (puntatore del mouse ▾)\n🟠 Controllo         fine\n🟠 Controllo         se <<(posizione x) > (20)> e <(posizione x) < (100)>> allora\n🟧 Variabili             porta (fatto ▾) a (1)\n🟧 Variabili             cambia (punteggio ▾) di (1)\n🟣 Aspetto               dire (Giusto: il Colosseo fu inaugurato nell'80 d.C.) per (3) secondi\n🟠 Controllo         altrimenti\n🟣 Aspetto               dire (Non ancora: guarda di nuovo le date sulla linea.) per (3) secondi\n🟠 Controllo         fine\n🟠 Controllo     fine\n\nSTAGE · script 1 di 1\n🟡 Situazioni    quando si clicca su 🏁\n🟧 Variabili     porta (punteggio ▾) a (0)\n🟣 Aspetto       passa allo sfondo (linea del tempo ▾)\n```\n",
+poligoni: "ESEMPIO · poligoni regolari per la 1ª secondaria di primo grado\n\n```\nSPRITE: Matita · script 1 di 2\n🔴 I Miei Blocchi   definisci (poligono) (lati) (lato) · Esegui senza aggiornare lo schermo\n🟠 Controllo     ripeti (lati) volte\n🔵 Movimento         fai (lato) passi\n🔵 Movimento         ruota ↻ di ((360) / (lati)) gradi\n🟠 Controllo     fine\n```\n\n```\nSPRITE: Matita · script 2 di 2\n🟡 Situazioni    quando si clicca su 🏁\n🟩 Penna         pulisci\n🟩 Penna         penna su\n🔵 Movimento     vai a x: (0) y: (0)\n🔵 Movimento     punta in direzione (90)\n🩵 Sensori       chiedi (Quanti lati?) e attendi\n🟩 Penna         usa penna di spessore (3)\n🟩 Penna         penna giù\n🔴 I Miei Blocchi   poligono (risposta) (60)\n🟩 Penna         penna su\n```\n"
+};
+var last = null, views = [], timer = null;
+function $(id){ return document.getElementById(id); }
+function toast(m){ var t=$("toast"); t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(function(){ t.hidden=true; },2600); }
+function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function slug(s){ return (s||"progetto").replace(/ª/g,"a").replace(/[º°]/g,"o").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "progetto"; }
+
+function emptyState(){
+  last=null;
+  var st=$("status"); st.textContent="";
+  st.appendChild(el("span","pill wait","In attesa")); st.appendChild(el("span",null,"Incolla gli script nel riquadro 1."));
+  $("sprites").textContent=""; $("issues").textContent=""; $("meta").textContent="Qui compariranno sprite, script, variabili ed eventuali righe da correggere.";
+  $("sb3").disabled=true; $("copiasb").disabled=true; $("dlhint").textContent="";
+  var box=$("preview"); box.textContent=""; box.appendChild(el("p","hint","Qui compariranno le immagini dei blocchi, una per script.")); $("sbtext").textContent="";
+}
+function run(){
+  var text = $("src").value;
+  if (!text.trim()) { emptyState(); return; }
+  var r;
+  try { r = ScratchLabEngine.convert(text); } catch(e){ r = { ok:false, error:"Errore inatteso nella lettura: "+e.message, report:[] }; }
+  last = r; render(r);
+}
+function render(r){
+  var st=$("status"); st.textContent="";
+  var sp=$("sprites"); sp.textContent=""; var iss=$("issues"); iss.textContent=""; $("meta").textContent="";
+  if (r.error){
+    st.appendChild(el("span","pill err","Da correggere")); st.appendChild(el("span",null,r.error));
+    $("sb3").disabled=true; $("copiasb").disabled=true; $("preview").textContent=""; $("sbtext").textContent=""; return;
+  }
+  var nScript = r.summary.reduce(function(a,s){ return a+s.scripts; },0);
+  if (r.errors) st.appendChild(el("span","pill err", r.errors===1?"1 riga da correggere":r.errors+" righe da correggere"));
+  else st.appendChild(el("span","pill ok","Pronto"));
+  if (r.warnings) st.appendChild(el("span","pill warn", r.warnings===1?"1 avviso":r.warnings+" avvisi"));
+  var nSpr = r.summary.filter(function(s){ return s.name!=="Stage"; }).length;
+  st.appendChild(el("span",null, nScript+" script · "+nSpr+(nSpr===1?" sprite":" sprite")+" e lo Stage"));
+  r.summary.forEach(function(s){
+    var c=el("div","spr"); c.appendChild(el("b",null,s.name==="Stage"?"Stage":s.name));
+    c.appendChild(el("span",null, s.scripts+" script"));
+    var cs=s.costumes.length? s.costumes.join(", ") : (s.name==="Stage"?"sfondo1":"costume1");
+    c.appendChild(el("span",null,(s.name==="Stage"?"Sfondi: ":"Costumi: ")+cs));
+    if (s.sounds.length) c.appendChild(el("span",null,"Suoni (muti): "+s.sounds.join(", ")));
+    sp.appendChild(c);
+  });
+  var parts=[];
+  if (r.vars.length) parts.push(["Variabili", r.vars.join(", ")]);
+  if (r.lists.length) parts.push(["Liste", r.lists.join(", ")]);
+  if (r.broadcasts.length) parts.push(["Messaggi", r.broadcasts.join(", ")]);
+  if (r.extensions.length) parts.push(["Estensioni", r.extensions.map(function(x){ return {pen:"Penna",music:"Musica",text2speech:"Da Testo a Voce",translate:"Traduci"}[x]||x; }).join(", ")]);
+  var meta=$("meta"); parts.forEach(function(p,i){ if(i) meta.appendChild(document.createTextNode(" · ")); meta.appendChild(el("b",null,p[0]+": ")); meta.appendChild(document.createTextNode(p[1])); });
+  r.report.forEach(function(x){
+    if (x.ok && !(x.warn && x.warn.length)) return;
+    var li=el("li", x.ok?"warn":"err");
+    li.appendChild(el("span","ln", x.n? "riga "+x.n : "progetto"));
+    li.appendChild(el("span","code", x.raw.trim()));
+    li.appendChild(el("span","msg", (x.ok? "Controlla: " : "Da correggere: ")+(x.ok? x.warn.join(" · ") : x.msg)));
+    iss.appendChild(li);
+  });
+  $("sb3").disabled = r.summary.length===0;
+  $("copiasb").disabled = !r.scratchblocks.length;
+  $("dlhint").textContent = r.errors ? "Le righe da correggere non entrano nel file: correggile qui sopra e il file si aggiorna, oppure scaricalo così e completale in Scratch." : "";
+  renderPreview(r);
+}
+function sbAll(r){ return r.scratchblocks.map(function(s){ return "// "+s.sprite+"\n"+s.text; }).join("\n\n"); }
+function renderPreview(r){
+  var box=$("preview"); box.textContent=""; views=[];
+  $("sbtext").textContent = sbAll(r);
+  if (!window.scratchblocks){ box.appendChild(el("p","hint","Anteprima dei blocchi non disponibile: la libreria scratchblocks non si è caricata. Il file .sb3 funziona lo stesso.")); return; }
+  r.scratchblocks.forEach(function(s,i){
+    var card=el("div","script"), head=el("div","head");
+    head.appendChild(el("b",null,(s.sprite==="Stage"?"Stage":"Sprite: "+s.sprite)+" · script "+(i+1)));
+    var b=el("button","btn sm","Scarica SVG"); b.type="button"; b.dataset.idx=String(i); head.appendChild(b);
+    card.appendChild(head);
+    var area=el("div","blocks");
+    try{
+      var doc=scratchblocks.parse(s.text,{languages:["it","en"]});
+      var view=scratchblocks.newView(doc,{style:"scratch3",languages:["it","en"],scale:0.675});
+      area.appendChild(view.render()); views.push({view:view,name:s.sprite});
+    }catch(e){ area.appendChild(el("p","hint","Anteprima non disponibile per questo script.")); views.push(null); }
+    card.appendChild(area); box.appendChild(card);
+  });
+}
+var dl=null, dlTried=false;
+function getDownloads(){
+  if (dlTried) return Promise.resolve(dl);
+  dlTried=true;
+  try{ if (window.claude && window.claude.use) return window.claude.use("downloads").then(function(d){ dl=d; return d; },function(){ return null; }); }catch(e){}
+  return Promise.resolve(null);
+}
+function blobDownload(name, blob){
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500);
+}
+function offer(name, blob, altName){
+  return getDownloads().then(function(d){
+    if (!d){ blobDownload(name, blob); toast("File pronto: "+name); return; }
+    return d.save({filename:name, data:blob}).then(function(){ toast("File salvato: "+name); }, function(err){
+      var c=(err&&err.code)||"unavailable";
+      if (c==="rejected_extension" && altName){
+        $("dlhint").textContent="Qui il formato .sb3 non si può salvare direttamente: ti propongo lo stesso file con estensione .zip. Dopo il download rinominalo da «"+altName+"» a «"+name+"» e aprilo in Scratch.";
+        return d.save({filename:altName, data:blob}).then(function(){ toast("File salvato: "+altName); },function(e2){ if((e2&&e2.code)==="declined") toast("Download annullato"); else $("dlhint").textContent="Il download non è riuscito qui. Apri il convertitore sul sito www.edugem.it e riprova."; });
+      }
+      if (c==="declined") toast("Download annullato");
+      else if (c==="rate_limited") toast("Attendi un momento e riprova");
+      else $("dlhint").textContent="Il download non è riuscito qui (motivo: "+c+"). Apri il convertitore sul sito www.edugem.it e riprova.";
+    });
+  });
+}
+function buildSb3(r){
+  var zip=new JSZip();
+  zip.file("project.json", JSON.stringify(r.project));
+  Object.keys(r.assets).forEach(function(n){ zip.file(n, r.assets[n]); });
+  return zip.generateAsync({type:"blob", mimeType:"application/x.scratch.sb3", compression:"DEFLATE"});
+}
+function copy(txt, node){
+  function fb(){ try{ var rg=document.createRange(); rg.selectNodeContents(node); var s=window.getSelection(); s.removeAllRanges(); s.addRange(rg); toast("Testo selezionato: copialo con Ctrl+C"); }catch(e){ toast("Seleziona il testo e copialo a mano"); } }
+  try{ navigator.clipboard.writeText(txt).then(function(){ toast("Testo copiato"); }, fb); }catch(e){ fb(); }
+}
+function start(){
+  getDownloads();
+  $("src").value = "";
+  run();
+  $("src").addEventListener("input", function(){ clearTimeout(timer); timer=setTimeout(run,400); });
+  $("converti").addEventListener("click", run);
+  $("carica").addEventListener("click", function(){ $("src").value=ESEMPI[$("esempio").value]; run(); toast("Esempio caricato"); });
+  $("svuota").addEventListener("click", function(){ $("src").value=""; $("nome").value=""; run(); $("src").focus(); });
+  $("sb3").addEventListener("click", function(){
+    if (!last || last.error) return;
+    var base=slug($("nome").value.trim() || "progetto-scratchlab");
+    buildSb3(last).then(function(blob){ return offer(base+".sb3", blob, base+".zip"); }).catch(function(e){ $("dlhint").textContent="Non sono riuscito a creare il file: "+e.message; });
+  });
+  $("copiasb").addEventListener("click", function(){ if(last && !last.error) copy(sbAll(last), $("sbtext")); });
+  $("preview").addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b || b.dataset.idx==null) return;
+    var v=views[+b.dataset.idx]; if(!v) return;
+    try{ var svg=v.view.exportSVGString(); offer(slug(v.name)+"-script-"+(+b.dataset.idx+1)+".svg", new Blob([svg],{type:"image/svg+xml"})); }catch(err){ toast("Immagine non disponibile"); }
+  });
+  $("tema").addEventListener("click", function(){
+    var r=document.documentElement, cur=r.getAttribute("data-theme");
+    var dark = cur ? cur==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    r.setAttribute("data-theme", dark ? "light" : "dark");
+  });
+}
+start();
+})();
+</script>
